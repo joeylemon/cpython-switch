@@ -117,6 +117,7 @@ struct ast_state {
     PyObject *SetComp_type;
     PyObject *Set_type;
     PyObject *Slice_type;
+    PyObject *Sswitch_type;
     PyObject *Starred_type;
     PyObject *Store_singleton;
     PyObject *Store_type;
@@ -204,6 +205,7 @@ struct ast_state {
     PyObject *ops;
     PyObject *optional_vars;
     PyObject *orelse;
+    PyObject *orsdefault;
     PyObject *posonlyargs;
     PyObject *returns;
     PyObject *right;
@@ -374,6 +376,7 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->SetComp_type);
     Py_CLEAR(state->Set_type);
     Py_CLEAR(state->Slice_type);
+    Py_CLEAR(state->Sswitch_type);
     Py_CLEAR(state->Starred_type);
     Py_CLEAR(state->Store_singleton);
     Py_CLEAR(state->Store_type);
@@ -461,6 +464,7 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->ops);
     Py_CLEAR(state->optional_vars);
     Py_CLEAR(state->orelse);
+    Py_CLEAR(state->orsdefault);
     Py_CLEAR(state->posonlyargs);
     Py_CLEAR(state->returns);
     Py_CLEAR(state->right);
@@ -549,6 +553,7 @@ static int init_identifiers(struct ast_state *state)
     if ((state->ops = PyUnicode_InternFromString("ops")) == NULL) return 0;
     if ((state->optional_vars = PyUnicode_InternFromString("optional_vars")) == NULL) return 0;
     if ((state->orelse = PyUnicode_InternFromString("orelse")) == NULL) return 0;
+    if ((state->orsdefault = PyUnicode_InternFromString("orsdefault")) == NULL) return 0;
     if ((state->posonlyargs = PyUnicode_InternFromString("posonlyargs")) == NULL) return 0;
     if ((state->returns = PyUnicode_InternFromString("returns")) == NULL) return 0;
     if ((state->right = PyUnicode_InternFromString("right")) == NULL) return 0;
@@ -671,6 +676,11 @@ static const char * const If_fields[]={
     "test",
     "body",
     "orelse",
+};
+static const char * const Sswitch_fields[]={
+    "value",
+    "body",
+    "orsdefault",
 };
 static const char * const With_fields[]={
     "items",
@@ -1289,6 +1299,7 @@ init_types(struct ast_state *state)
         "     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
         "     | While(expr test, stmt* body, stmt* orelse)\n"
         "     | If(expr test, stmt* body, stmt* orelse)\n"
+        "     | Sswitch(expr value, stmt* body, stmt* orsdefault)\n"
         "     | With(withitem* items, stmt* body, string? type_comment)\n"
         "     | AsyncWith(withitem* items, stmt* body, string? type_comment)\n"
         "     | Raise(expr? exc, expr? cause)\n"
@@ -1380,6 +1391,10 @@ init_types(struct ast_state *state)
     state->If_type = make_type(state, "If", state->stmt_type, If_fields, 3,
         "If(expr test, stmt* body, stmt* orelse)");
     if (!state->If_type) return 0;
+    state->Sswitch_type = make_type(state, "Sswitch", state->stmt_type,
+                                    Sswitch_fields, 3,
+        "Sswitch(expr value, stmt* body, stmt* orsdefault)");
+    if (!state->Sswitch_type) return 0;
     state->With_type = make_type(state, "With", state->stmt_type, With_fields,
                                  3,
         "With(withitem* items, stmt* body, string? type_comment)");
@@ -2342,6 +2357,31 @@ If(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse, int lineno, int
     p->v.If.test = test;
     p->v.If.body = body;
     p->v.If.orelse = orelse;
+    p->lineno = lineno;
+    p->col_offset = col_offset;
+    p->end_lineno = end_lineno;
+    p->end_col_offset = end_col_offset;
+    return p;
+}
+
+stmt_ty
+Sswitch(expr_ty value, asdl_stmt_seq * body, asdl_stmt_seq * orsdefault, int
+        lineno, int col_offset, int end_lineno, int end_col_offset, PyArena
+        *arena)
+{
+    stmt_ty p;
+    if (!value) {
+        PyErr_SetString(PyExc_ValueError,
+                        "field 'value' is required for Sswitch");
+        return NULL;
+    }
+    p = (stmt_ty)PyArena_Malloc(arena, sizeof(*p));
+    if (!p)
+        return NULL;
+    p->kind = Sswitch_kind;
+    p->v.Sswitch.value = value;
+    p->v.Sswitch.body = body;
+    p->v.Sswitch.orsdefault = orsdefault;
     p->lineno = lineno;
     p->col_offset = col_offset;
     p->end_lineno = end_lineno;
@@ -3801,6 +3841,27 @@ ast2obj_stmt(struct ast_state *state, void* _o)
         value = ast2obj_list(state, (asdl_seq*)o->v.If.orelse, ast2obj_stmt);
         if (!value) goto failed;
         if (PyObject_SetAttr(result, state->orelse, value) == -1)
+            goto failed;
+        Py_DECREF(value);
+        break;
+    case Sswitch_kind:
+        tp = (PyTypeObject *)state->Sswitch_type;
+        result = PyType_GenericNew(tp, NULL, NULL);
+        if (!result) goto failed;
+        value = ast2obj_expr(state, o->v.Sswitch.value);
+        if (!value) goto failed;
+        if (PyObject_SetAttr(result, state->value, value) == -1)
+            goto failed;
+        Py_DECREF(value);
+        value = ast2obj_list(state, (asdl_seq*)o->v.Sswitch.body, ast2obj_stmt);
+        if (!value) goto failed;
+        if (PyObject_SetAttr(result, state->body, value) == -1)
+            goto failed;
+        Py_DECREF(value);
+        value = ast2obj_list(state, (asdl_seq*)o->v.Sswitch.orsdefault,
+                             ast2obj_stmt);
+        if (!value) goto failed;
+        if (PyObject_SetAttr(result, state->orsdefault, value) == -1)
             goto failed;
         Py_DECREF(value);
         break;
@@ -6390,6 +6451,100 @@ obj2ast_stmt(struct ast_state *state, PyObject* obj, stmt_ty* out, PyArena*
         }
         *out = If(test, body, orelse, lineno, col_offset, end_lineno,
                   end_col_offset, arena);
+        if (*out == NULL) goto failed;
+        return 0;
+    }
+    tp = state->Sswitch_type;
+    isinstance = PyObject_IsInstance(obj, tp);
+    if (isinstance == -1) {
+        return 1;
+    }
+    if (isinstance) {
+        expr_ty value;
+        asdl_stmt_seq* body;
+        asdl_stmt_seq* orsdefault;
+
+        if (_PyObject_LookupAttr(obj, state->value, &tmp) < 0) {
+            return 1;
+        }
+        if (tmp == NULL) {
+            PyErr_SetString(PyExc_TypeError, "required field \"value\" missing from Sswitch");
+            return 1;
+        }
+        else {
+            int res;
+            res = obj2ast_expr(state, tmp, &value, arena);
+            if (res != 0) goto failed;
+            Py_CLEAR(tmp);
+        }
+        if (_PyObject_LookupAttr(obj, state->body, &tmp) < 0) {
+            return 1;
+        }
+        if (tmp == NULL) {
+            PyErr_SetString(PyExc_TypeError, "required field \"body\" missing from Sswitch");
+            return 1;
+        }
+        else {
+            int res;
+            Py_ssize_t len;
+            Py_ssize_t i;
+            if (!PyList_Check(tmp)) {
+                PyErr_Format(PyExc_TypeError, "Sswitch field \"body\" must be a list, not a %.200s", _PyType_Name(Py_TYPE(tmp)));
+                goto failed;
+            }
+            len = PyList_GET_SIZE(tmp);
+            body = _Py_asdl_stmt_seq_new(len, arena);
+            if (body == NULL) goto failed;
+            for (i = 0; i < len; i++) {
+                stmt_ty val;
+                PyObject *tmp2 = PyList_GET_ITEM(tmp, i);
+                Py_INCREF(tmp2);
+                res = obj2ast_stmt(state, tmp2, &val, arena);
+                Py_DECREF(tmp2);
+                if (res != 0) goto failed;
+                if (len != PyList_GET_SIZE(tmp)) {
+                    PyErr_SetString(PyExc_RuntimeError, "Sswitch field \"body\" changed size during iteration");
+                    goto failed;
+                }
+                asdl_seq_SET(body, i, val);
+            }
+            Py_CLEAR(tmp);
+        }
+        if (_PyObject_LookupAttr(obj, state->orsdefault, &tmp) < 0) {
+            return 1;
+        }
+        if (tmp == NULL) {
+            PyErr_SetString(PyExc_TypeError, "required field \"orsdefault\" missing from Sswitch");
+            return 1;
+        }
+        else {
+            int res;
+            Py_ssize_t len;
+            Py_ssize_t i;
+            if (!PyList_Check(tmp)) {
+                PyErr_Format(PyExc_TypeError, "Sswitch field \"orsdefault\" must be a list, not a %.200s", _PyType_Name(Py_TYPE(tmp)));
+                goto failed;
+            }
+            len = PyList_GET_SIZE(tmp);
+            orsdefault = _Py_asdl_stmt_seq_new(len, arena);
+            if (orsdefault == NULL) goto failed;
+            for (i = 0; i < len; i++) {
+                stmt_ty val;
+                PyObject *tmp2 = PyList_GET_ITEM(tmp, i);
+                Py_INCREF(tmp2);
+                res = obj2ast_stmt(state, tmp2, &val, arena);
+                Py_DECREF(tmp2);
+                if (res != 0) goto failed;
+                if (len != PyList_GET_SIZE(tmp)) {
+                    PyErr_SetString(PyExc_RuntimeError, "Sswitch field \"orsdefault\" changed size during iteration");
+                    goto failed;
+                }
+                asdl_seq_SET(orsdefault, i, val);
+            }
+            Py_CLEAR(tmp);
+        }
+        *out = Sswitch(value, body, orsdefault, lineno, col_offset, end_lineno,
+                       end_col_offset, arena);
         if (*out == NULL) goto failed;
         return 0;
     }
@@ -9784,6 +9939,9 @@ astmodule_exec(PyObject *m)
         return -1;
     }
     if (PyModule_AddObjectRef(m, "If", state->If_type) < 0) {
+        return -1;
+    }
+    if (PyModule_AddObjectRef(m, "Sswitch", state->Sswitch_type) < 0) {
         return -1;
     }
     if (PyModule_AddObjectRef(m, "With", state->With_type) < 0) {

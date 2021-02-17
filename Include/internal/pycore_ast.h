@@ -117,6 +117,7 @@ struct ast_state {
     PyObject *SetComp_type;
     PyObject *Set_type;
     PyObject *Slice_type;
+    PyObject *Sswitch_type;
     PyObject *Starred_type;
     PyObject *Store_singleton;
     PyObject *Store_type;
@@ -204,6 +205,7 @@ struct ast_state {
     PyObject *ops;
     PyObject *optional_vars;
     PyObject *orelse;
+    PyObject *orsdefault;
     PyObject *posonlyargs;
     PyObject *returns;
     PyObject *right;

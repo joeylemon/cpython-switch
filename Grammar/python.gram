@@ -80,6 +80,7 @@ simple_stmt[stmt_ty] (memo):
 compound_stmt[stmt_ty]:
     | &('def' | '@' | ASYNC) function_def
     | &'if' if_stmt
+    | &'sswitch' sswitch_stmt
     | &('class' | '@') class_def
     | &('with' | ASYNC) with_stmt
     | &('for' | ASYNC) for_stmt

@@ -172,27 +172,16 @@ elif_stmt[stmt_ty]:
     | 'elif' a=named_expression &&':' b=block c=[else_block] { _Py_If(a, b, c, EXTRA) }
 else_block[asdl_stmt_seq*]: 'else' &&':' b=block { b }
 
-# sswitch_stmt[stmt_ty]:
-#     | 'sswitch' a=named_expression &&':' b=block c=scase_stmt {
-#         _Py_Sswitch(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-#     | 'sswitch' a=named_expression &&':' b=block c=[sdefault_block] { _Py_Sswitch(a, b, c, EXTRA) }
-# scase_stmt[stmt_ty]:
-#     | 'scase' a=named_expression &&':' b=block c=scase_stmt {
-#         _Py_Sswitch(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-#     | 'scase' a=named_expression &&':' b=block c=[sdefault_block] { _Py_Sswitch(a, b, c, EXTRA) }
-# sdefault_block[asdl_stmt_seq*]: 'sdefault' &&':' b=block { b }
-
 switch_stmt[stmt_ty]:
     | 'switch' a=named_expression &&':' b=switch_block { _Py_Switch(a, b, EXTRA) }
-scase_stmt[stmt_ty]:
-    | 'scase' a=named_expression &&':' b=block c=scase_stmt {
-        _Py_Scase(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-    | 'scase' a=named_expression &&':' b=block c=[sdefault_block] { _Py_Scase(a, b, c, EXTRA) }
-sdefault_block[asdl_stmt_seq*]: 'sdefault' &&':' b=block { b }
+case_stmt[stmt_ty]:
+    | 'circumstance' a=named_expression &&':' b=block c=case_stmt {
+        _Py_Case(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
+    | 'circumstance' a=named_expression &&':' b=block c=[else_block] { _Py_Case(a, b, c, EXTRA) }
 
 switch_block[asdl_stmt_seq*] (memo):
-    | NEWLINE INDENT a=scase_stmt DEDENT { a }
-    | NEWLINE INDENT a=[sdefault_block] DEDENT { a }
+    | NEWLINE INDENT a=case_stmt DEDENT { a }
+    | NEWLINE INDENT a=[else_block] DEDENT { a }
 
 while_stmt[stmt_ty]:
     | 'while' a=named_expression &&':' b=block c=[else_block] { _Py_While(a, b, c, EXTRA) }

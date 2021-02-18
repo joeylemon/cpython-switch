@@ -1234,29 +1234,29 @@ class GrammarTests(unittest.TestCase):
     
     def test_sswitch(self):
         switch 0:
-            sdefault: pass
+            else: pass
         switch 0:
-            scase 0: pass
+            circumstance 0: pass
         switch 0:
-            scase 0: pass
-            scase 0: pass
-            scase 0: pass
-            sdefault: pass
+            circumstance 0: pass
+            circumstance 0: pass
+            circumstance 0: pass
+            else: pass
         
         switch 0:
-            sdefault:
+            else:
                 pass
         switch 0:
-            scase 0:
+            circumstance 0:
                 pass
         switch 0:
-            scase 0:
+            circumstance 0:
                 pass
-            scase 0:
+            circumstance 0:
                 pass
-            scase 0:
+            circumstance 0:
                 pass
-            sdefault:
+            else:
                 pass
 
 

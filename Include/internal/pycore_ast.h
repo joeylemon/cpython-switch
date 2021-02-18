@@ -114,16 +114,17 @@ struct ast_state {
     PyObject *RShift_type;
     PyObject *Raise_type;
     PyObject *Return_type;
+    PyObject *Scase_type;
     PyObject *SetComp_type;
     PyObject *Set_type;
     PyObject *Slice_type;
-    PyObject *Sswitch_type;
     PyObject *Starred_type;
     PyObject *Store_singleton;
     PyObject *Store_type;
     PyObject *Sub_singleton;
     PyObject *Sub_type;
     PyObject *Subscript_type;
+    PyObject *Switch_type;
     PyObject *Try_type;
     PyObject *Tuple_type;
     PyObject *TypeIgnore_type;

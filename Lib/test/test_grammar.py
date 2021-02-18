@@ -1233,15 +1233,31 @@ class GrammarTests(unittest.TestCase):
         else: pass
     
     def test_sswitch(self):
-        sswitch 0: pass
-        sdefault: pass
-        sswitch 0: pass
-        scase 0: pass
-        sswitch 0: pass
-        scase 0: pass
-        scase 0: pass
-        scase 0: pass
-        sdefault: pass
+        switch 0:
+            sdefault: pass
+        switch 0:
+            scase 0: pass
+        switch 0:
+            scase 0: pass
+            scase 0: pass
+            scase 0: pass
+            sdefault: pass
+        
+        switch 0:
+            sdefault:
+                pass
+        switch 0:
+            scase 0:
+                pass
+        switch 0:
+            scase 0:
+                pass
+            scase 0:
+                pass
+            scase 0:
+                pass
+            sdefault:
+                pass
 
 
     def test_while(self):

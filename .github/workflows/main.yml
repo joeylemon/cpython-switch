@@ -17,30 +17,26 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
     
     steps:
       - uses: actions/checkout@v2
       
+      - run: ./configure --with-pydebug
       - run: make regen-pegen
       - run: make regen-ast
       
   build:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-
+    needs: [ generate ]
+    
     steps:
       - uses: actions/checkout@v2
 
-      - run: ./configure --with-pydebug
       - run:  make -j
 
   test:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
+    needs: [ build ]
     
     steps:
       - uses: actions/checkout@v2

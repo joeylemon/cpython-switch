@@ -158,7 +158,7 @@ enum _stmt_kind {FunctionDef_kind=1, AsyncFunctionDef_kind=2, ClassDef_kind=3,
                   Return_kind=4, Delete_kind=5, Assign_kind=6,
                   AugAssign_kind=7, AnnAssign_kind=8, For_kind=9,
                   AsyncFor_kind=10, While_kind=11, If_kind=12, Switch_kind=13,
-                  Case_kind=14, With_kind=15, AsyncWith_kind=16, Raise_kind=17,
+                  Kase_kind=14, With_kind=15, AsyncWith_kind=16, Raise_kind=17,
                   Try_kind=18, Assert_kind=19, Import_kind=20,
                   ImportFrom_kind=21, Global_kind=22, Nonlocal_kind=23,
                   Expr_kind=24, Pass_kind=25, Break_kind=26, Continue_kind=27};
@@ -255,7 +255,7 @@ struct _stmt {
             expr_ty value;
             asdl_stmt_seq *body;
             asdl_stmt_seq *orsdefault;
-        } Case;
+        } Kase;
 
         struct {
             asdl_withitem_seq *items;
@@ -614,8 +614,8 @@ stmt_ty _Py_If(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse, int
 stmt_ty _Py_Switch(expr_ty value, asdl_stmt_seq * body, int lineno, int
                    col_offset, int end_lineno, int end_col_offset, PyArena
                    *arena);
-#define Case(a0, a1, a2, a3, a4, a5, a6, a7) _Py_Case(a0, a1, a2, a3, a4, a5, a6, a7)
-stmt_ty _Py_Case(expr_ty value, asdl_stmt_seq * body, asdl_stmt_seq *
+#define Kase(a0, a1, a2, a3, a4, a5, a6, a7) _Py_Kase(a0, a1, a2, a3, a4, a5, a6, a7)
+stmt_ty _Py_Kase(expr_ty value, asdl_stmt_seq * body, asdl_stmt_seq *
                  orsdefault, int lineno, int col_offset, int end_lineno, int
                  end_col_offset, PyArena *arena);
 #define With(a0, a1, a2, a3, a4, a5, a6, a7) _Py_With(a0, a1, a2, a3, a4, a5, a6, a7)

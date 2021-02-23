@@ -34,7 +34,7 @@ module Python
           | While(expr test, stmt* body, stmt* orelse)
           | If(expr test, stmt* body, stmt* orelse)
           | Switch(expr value, stmt* body)
-          | Case(expr value, stmt* body, stmt* orsdefault)
+          | Kase(expr value, stmt* body, stmt* orsdefault)
           | With(withitem* items, stmt* body, string? type_comment)
           | AsyncWith(withitem* items, stmt* body, string? type_comment)
 

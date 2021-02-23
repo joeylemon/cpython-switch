@@ -174,13 +174,13 @@ else_block[asdl_stmt_seq*]: 'else' &&':' b=block { b }
 
 switch_stmt[stmt_ty]:
     | 'switch' a=named_expression &&':' b=switch_block { _Py_Switch(a, b, EXTRA) }
-case_stmt[stmt_ty]:
-    | 'circumstance' a=named_expression &&':' b=block c=case_stmt {
-        _Py_Case(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-    | 'circumstance' a=named_expression &&':' b=block c=[else_block] { _Py_Case(a, b, c, EXTRA) }
+kase_stmt[stmt_ty]:
+    | 'kase' a=named_expression &&':' b=block c=kase_stmt {
+        _Py_Kase(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
+    | 'kase' a=named_expression &&':' b=block c=[else_block] { _Py_Kase(a, b, c, EXTRA) }
 
 switch_block[asdl_stmt_seq*] (memo):
-    | NEWLINE INDENT a=case_stmt DEDENT { a }
+    | NEWLINE INDENT a=kase_stmt DEDENT { a }
     | NEWLINE INDENT a=[else_block] DEDENT { a }
 
 while_stmt[stmt_ty]:

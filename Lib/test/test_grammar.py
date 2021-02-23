@@ -1216,7 +1216,7 @@ class GrammarTests(unittest.TestCase):
             compile('assert x, "msg"', '<testcase>', 'exec')
 
 
-    ### compound_stmt: if_stmt | sswitch_stmt | while_stmt | for_stmt | try_stmt | funcdef | classdef
+    ### compound_stmt: if_stmt | switch_stmt | while_stmt | for_stmt | try_stmt | funcdef | classdef
     # Tested below
 
     def test_if(self):
@@ -1232,29 +1232,29 @@ class GrammarTests(unittest.TestCase):
         elif 0: pass
         else: pass
     
-    def test_sswitch(self):
+    def test_switch(self):
         switch 0:
             else: pass
         switch 0:
-            circumstance 0: pass
+            kase 0: pass
         switch 0:
-            circumstance 0: pass
-            circumstance 0: pass
-            circumstance 0: pass
+            kase 0: pass
+            kase 0: pass
+            kase 0: pass
             else: pass
         
         switch 0:
             else:
                 pass
         switch 0:
-            circumstance 0:
+            kase 0:
                 pass
         switch 0:
-            circumstance 0:
+            kase 0:
                 pass
-            circumstance 0:
+            kase 0:
                 pass
-            circumstance 0:
+            kase 0:
                 pass
             else:
                 pass

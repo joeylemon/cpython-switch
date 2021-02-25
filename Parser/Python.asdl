@@ -33,6 +33,8 @@ module Python
           | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)
           | While(expr test, stmt* body, stmt* orelse)
           | If(expr test, stmt* body, stmt* orelse)
+          | Switch(expr value, stmt* body)
+          | Kase(expr value, stmt* body, stmt* orsdefault)
           | With(withitem* items, stmt* body, string? type_comment)
           | AsyncWith(withitem* items, stmt* body, string? type_comment)
 

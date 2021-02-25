@@ -188,31 +188,31 @@ def read_setup_file(filename):
                     continue
 
                 suffix = os.path.splitext(word)[1]
-                switch = word[0:2] ; value = word[2:]
+                sswitch = word[0:2] ; value = word[2:]
 
                 if suffix in (".c", ".cc", ".cpp", ".cxx", ".c++", ".m", ".mm"):
                     # hmm, should we do something about C vs. C++ sources?
                     # or leave it up to the CCompiler implementation to
                     # worry about?
                     ext.sources.append(word)
-                elif switch == "-I":
+                elif sswitch == "-I":
                     ext.include_dirs.append(value)
-                elif switch == "-D":
+                elif sswitch == "-D":
                     equals = value.find("=")
                     if equals == -1:        # bare "-DFOO" -- no value
                         ext.define_macros.append((value, None))
                     else:                   # "-DFOO=blah"
                         ext.define_macros.append((value[0:equals],
                                                   value[equals+2:]))
-                elif switch == "-U":
+                elif sswitch == "-U":
                     ext.undef_macros.append(value)
-                elif switch == "-C":        # only here 'cause makesetup has it!
+                elif sswitch == "-C":        # only here 'cause makesetup has it!
                     ext.extra_compile_args.append(word)
-                elif switch == "-l":
+                elif sswitch == "-l":
                     ext.libraries.append(value)
-                elif switch == "-L":
+                elif sswitch == "-L":
                     ext.library_dirs.append(value)
-                elif switch == "-R":
+                elif sswitch == "-R":
                     ext.runtime_library_dirs.append(value)
                 elif word == "-rpath":
                     append_next_word = ext.runtime_library_dirs
@@ -220,7 +220,7 @@ def read_setup_file(filename):
                     append_next_word = ext.extra_link_args
                 elif word == "-Xcompiler":
                     append_next_word = ext.extra_compile_args
-                elif switch == "-u":
+                elif sswitch == "-u":
                     ext.extra_link_args.append(word)
                     if not value:
                         append_next_word = ext.extra_link_args

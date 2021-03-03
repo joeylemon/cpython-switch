@@ -2751,6 +2751,96 @@ compiler_if(struct compiler *c, stmt_ty s)
     return 1;
 }
 
+// i've copied the above compiler_if block to compiler_switch
+static int
+compiler_switch(struct compiler *c, stmt_ty s)
+{
+    basicblock *end, *next;
+
+    // make sure the given statement is actually a switch statement
+    assert(s->kind == Switch_kind);
+
+    // compiler_new_block is used to "create a block but don’t use it (used for generating jumps)"
+    end = compiler_new_block(c);
+    if (end == NULL) {
+        return 0;
+    }
+
+    // here the compiler is checking if the if-statement has an else block
+    // if it does, create a new block to jump to if the if-statement test fails
+    //
+    // QUESTION: how can we adopt this for kases?
+    if (asdl_seq_LEN(s->v.If.orelse)) {
+        next = compiler_new_block(c);
+        if (next == NULL) {
+            return 0;
+        }
+    }
+    else {
+        next = end;
+    }
+
+    // here we can see the compiler is jumping to the else block generated above
+    // if the if-statement test fails
+    //
+    // NOTE: here we'd have to compare Switch.value to Kase.value somehow, or adopt
+    //       a different method
+    if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
+        return 0;
+    }
+
+    // it seems this macro evaluates the if-statement body
+    VISIT_SEQ(c, stmt, s->v.If.body);
+
+    // if the if-statement has an else block,
+    if (asdl_seq_LEN(s->v.If.orelse)) {
+        // add the opcode to jump to the end block
+        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
+
+        // set the current block to the "next" block
+        compiler_use_next_block(c, next);
+
+        // evaluate the else statement
+        VISIT_SEQ(c, stmt, s->v.If.orelse);
+    }
+
+    // set the current block to the "end" block
+    compiler_use_next_block(c, end);
+    return 1;
+}
+
+// i've copied the above compiler_if block to compiler_kase
+static int
+compiler_kase(struct compiler *c, stmt_ty s)
+{
+    basicblock *end, *next;
+    assert(s->kind == Kase_kind);
+    end = compiler_new_block(c);
+    if (end == NULL) {
+        return 0;
+    }
+    if (asdl_seq_LEN(s->v.If.orelse)) {
+        next = compiler_new_block(c);
+        if (next == NULL) {
+            return 0;
+        }
+    }
+    else {
+        next = end;
+    }
+    if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
+        return 0;
+    }
+    VISIT_SEQ(c, stmt, s->v.If.body);
+    if (asdl_seq_LEN(s->v.If.orelse)) {
+        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
+        compiler_use_next_block(c, next);
+        VISIT_SEQ(c, stmt, s->v.If.orelse);
+    }
+    compiler_use_next_block(c, end);
+    return 1;
+}
+
 static int
 compiler_for(struct compiler *c, stmt_ty s)
 {
@@ -3414,6 +3504,10 @@ compiler_visit_stmt(struct compiler *c, stmt_ty s)
         return compiler_while(c, s);
     case If_kind:
         return compiler_if(c, s);
+    case Switch_kind:
+        return compiler_switch(c, s);
+    case Kase_kind:
+        return compiler_kase(c, s);
     case Raise_kind:
         n = 0;
         if (s->v.Raise.exc) {

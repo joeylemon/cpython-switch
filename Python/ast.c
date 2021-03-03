@@ -398,6 +398,10 @@ validate_stmt(stmt_ty stmt)
     case Switch_kind:
         return validate_expr(stmt->v.Switch.value, Load) &&
             validate_body(stmt->v.Switch.body, "Switch");
+    case Kase_kind:
+        return validate_expr(stmt->v.Kase.value, Load) &&
+            validate_body(stmt->v.Kase.body, "Kase") &&
+            validate_stmts(stmt->v.Kase.orsdefault);
     case With_kind:
         if (!validate_nonempty_seq(stmt->v.With.items, "items", "With"))
             return 0;

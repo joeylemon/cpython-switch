@@ -2752,6 +2752,13 @@ compiler_if(struct compiler *c, stmt_ty s)
 }
 
 // i've copied the above compiler_if block to compiler_switch
+//
+// From the Python devguide (https://devguide.python.org/compiler/):
+// As an example, consider an ‘if’ statement with an ‘else’ block. The guard on the ‘if’ is a basic block
+// which is pointed to by the basic block containing the code leading to the ‘if’ statement. The ‘if’ statement
+// block contains jumps (which are exit points) to the true body of the ‘if’ and the ‘else’ body (which may be NULL),
+// each of which are their own basic blocks. Both of those blocks in turn point to the basic block representing the 
+// code following the entire ‘if’ statement.
 static int
 compiler_switch(struct compiler *c, stmt_ty s)
 {

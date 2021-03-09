@@ -2720,39 +2720,6 @@ compiler_lambda(struct compiler *c, expr_ty e)
     return 1;
 }
 
-static int
-compiler_if(struct compiler *c, stmt_ty s)
-{
-    basicblock *end, *next;
-    assert(s->kind == If_kind);
-    end = compiler_new_block(c);
-    if (end == NULL) {
-        return 0;
-    }
-    if (asdl_seq_LEN(s->v.If.orelse)) {
-        next = compiler_new_block(c);
-        if (next == NULL) {
-            return 0;
-        }
-    }
-    else {
-        next = end;
-    }
-    if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
-        return 0;
-    }
-    VISIT_SEQ(c, stmt, s->v.If.body);
-    if (asdl_seq_LEN(s->v.If.orelse)) {
-        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
-        compiler_use_next_block(c, next);
-        VISIT_SEQ(c, stmt, s->v.If.orelse);
-    }
-    compiler_use_next_block(c, end);
-    return 1;
-}
-
-// i've copied the above compiler_if block to compiler_switch
-//
 // From the Python devguide (https://devguide.python.org/compiler/):
 // As an example, consider an ‘if’ statement with an ‘else’ block. The guard on the ‘if’ is a basic block
 // which is pointed to by the basic block containing the code leading to the ‘if’ statement. The ‘if’ statement
@@ -2760,12 +2727,16 @@ compiler_if(struct compiler *c, stmt_ty s)
 // each of which are their own basic blocks. Both of those blocks in turn point to the basic block representing the 
 // code following the entire ‘if’ statement.
 static int
-compiler_switch(struct compiler *c, stmt_ty s)
+compiler_if(struct compiler *c, stmt_ty s)
 {
     basicblock *end, *next;
 
-    // make sure the given statement is actually a switch statement
-    assert(s->kind == Switch_kind);
+    // make sure the given statement is actually an if-statement
+    assert(s->kind == If_kind);
+
+    printf("\ncompile if statement\n");
+    printf("s->v.If.body addr: %p\n", s->v.If.body);
+    printf("s->v.If.body size: %ld\n", asdl_seq_LEN(s->v.If.body));
 
     // compiler_new_block is used to "create a block but don’t use it (used for generating jumps)"
     end = compiler_new_block(c);
@@ -2796,6 +2767,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
         return 0;
     }
 
+    // otherwise, if the if-statement test succeeds, move to body
     // it seems this macro evaluates the if-statement body
     VISIT_SEQ(c, stmt, s->v.If.body);
 
@@ -2816,12 +2788,45 @@ compiler_switch(struct compiler *c, stmt_ty s)
     return 1;
 }
 
-// i've copied the above compiler_if block to compiler_kase
+static int
+compiler_switch(struct compiler *c, stmt_ty s)
+{
+    basicblock *end;
+
+    assert(s->kind == Switch_kind);
+
+    printf("\ncompile switch statement\n");
+    printf("s->v.Switch.body addr: %p\n", s->v.Switch.body);
+    printf("s->v.Switch.body size: %ld\n", asdl_seq_LEN(s->v.Switch.body));
+
+    end = compiler_new_block(c);
+    if (end == NULL) {
+        return 0;
+    }
+
+    printf("visit switch body\n");
+    VISIT_SEQ(c, stmt, s->v.Switch.body);
+    printf("finished visiting switch body\n");
+
+    // if (asdl_seq_LEN(s->v.If.orelse)) {
+    //     ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
+
+    //     compiler_use_next_block(c, next);
+
+    //     VISIT_SEQ(c, stmt, s->v.If.orelse);
+    // }
+
+    compiler_use_next_block(c, end);
+    return 1;
+}
+
 static int
 compiler_kase(struct compiler *c, stmt_ty s)
 {
     basicblock *end, *next;
     assert(s->kind == Kase_kind);
+
+    printf("\ncompile kase statement\n");
     end = compiler_new_block(c);
     if (end == NULL) {
         return 0;

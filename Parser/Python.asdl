@@ -33,8 +33,7 @@ module Python
           | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)
           | While(expr test, stmt* body, stmt* orelse)
           | If(expr test, stmt* body, stmt* orelse)
-          | Switch(expr value, stmt* body)
-          | Kase(expr value, stmt* body, stmt* orsdefault)
+          | Switch(expr value, kasehandler* handlers, stmt* orelse)
           | With(withitem* items, stmt* body, string? type_comment)
           | AsyncWith(withitem* items, stmt* body, string? type_comment)
 
@@ -106,6 +105,9 @@ module Python
     comprehension = (expr target, expr iter, expr* ifs, int is_async)
 
     excepthandler = ExceptHandler(expr? type, identifier? name, stmt* body)
+                    attributes (int lineno, int col_offset, int? end_lineno, int? end_col_offset)
+
+    kasehandler = KaseHandler(expr value, stmt* body)
                     attributes (int lineno, int col_offset, int? end_lineno, int? end_col_offset)
 
     arguments = (arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs,

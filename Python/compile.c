@@ -2748,6 +2748,11 @@ compiler_if(struct compiler *c, stmt_ty s)
     // if it does, create a new block to jump to if the if-statement test fails
     //
     // QUESTION: how can we adopt this for kases?
+    // NOTE: This isn't only for else blocks. According to the grammar, orelse can be one of 4 things:
+    //          1. A list of elif stmts.
+    //          2. A list of elif stmts with an else block.
+    //          3. An else block.
+    //          4. NULL.
     if (asdl_seq_LEN(s->v.If.orelse)) {
         next = compiler_new_block(c);
         if (next == NULL) {
@@ -2763,6 +2768,8 @@ compiler_if(struct compiler *c, stmt_ty s)
     //
     // NOTE: here we'd have to compare Switch.value to Kase.value somehow, or adopt
     //       a different method
+    // NOTE: we can do that with ADDOP_I(c, COMPARE_OP, PyCmp_EQ) if we push the
+    //       test values beforehand
     if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
         return 0;
     }
@@ -2796,17 +2803,11 @@ compiler_switch(struct compiler *c, stmt_ty s)
     assert(s->kind == Switch_kind);
 
     printf("\ncompile switch statement\n");
-    printf("s->v.Switch.body addr: %p\n", s->v.Switch.body);
-    printf("s->v.Switch.body size: %ld\n", asdl_seq_LEN(s->v.Switch.body));
 
     end = compiler_new_block(c);
     if (end == NULL) {
         return 0;
     }
-
-    printf("visit switch body\n");
-    VISIT_SEQ(c, stmt, s->v.Switch.body);
-    printf("finished visiting switch body\n");
 
     // if (asdl_seq_LEN(s->v.If.orelse)) {
     //     ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
@@ -2816,39 +2817,6 @@ compiler_switch(struct compiler *c, stmt_ty s)
     //     VISIT_SEQ(c, stmt, s->v.If.orelse);
     // }
 
-    compiler_use_next_block(c, end);
-    return 1;
-}
-
-static int
-compiler_kase(struct compiler *c, stmt_ty s)
-{
-    basicblock *end, *next;
-    assert(s->kind == Kase_kind);
-
-    printf("\ncompile kase statement\n");
-    end = compiler_new_block(c);
-    if (end == NULL) {
-        return 0;
-    }
-    if (asdl_seq_LEN(s->v.If.orelse)) {
-        next = compiler_new_block(c);
-        if (next == NULL) {
-            return 0;
-        }
-    }
-    else {
-        next = end;
-    }
-    if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
-        return 0;
-    }
-    VISIT_SEQ(c, stmt, s->v.If.body);
-    if (asdl_seq_LEN(s->v.If.orelse)) {
-        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
-        compiler_use_next_block(c, next);
-        VISIT_SEQ(c, stmt, s->v.If.orelse);
-    }
     compiler_use_next_block(c, end);
     return 1;
 }
@@ -3518,8 +3486,6 @@ compiler_visit_stmt(struct compiler *c, stmt_ty s)
         return compiler_if(c, s);
     case Switch_kind:
         return compiler_switch(c, s);
-    case Kase_kind:
-        return compiler_kase(c, s);
     case Raise_kind:
         n = 0;
         if (s->v.Raise.exc) {

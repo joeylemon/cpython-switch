@@ -2734,9 +2734,9 @@ compiler_if(struct compiler *c, stmt_ty s)
     // make sure the given statement is actually an if-statement
     assert(s->kind == If_kind);
 
-    printf("\ncompile if statement\n");
-    printf("s->v.If.body addr: %p\n", s->v.If.body);
-    printf("s->v.If.body size: %ld\n", asdl_seq_LEN(s->v.If.body));
+    // printf("\ncompile if statement\n");
+    // printf("s->v.If.body addr: %p\n", s->v.If.body);
+    // printf("s->v.If.body size: %ld\n", asdl_seq_LEN(s->v.If.body));
 
     // compiler_new_block is used to "create a block but don’t use it (used for generating jumps)"
     end = compiler_new_block(c);
@@ -2798,24 +2798,74 @@ compiler_if(struct compiler *c, stmt_ty s)
 static int
 compiler_switch(struct compiler *c, stmt_ty s)
 {
-    basicblock *end;
+    int i;
+    int n;
+    kasehandler_ty kase, next_kase;
+    basicblock *bb_kase, *bb_next_kase;
+    basicblock *end, *orelse;
 
     assert(s->kind == Switch_kind);
 
     printf("\ncompile switch statement\n");
 
     end = compiler_new_block(c);
-    if (end == NULL) {
+    orelse = compiler_new_block(c);
+    if (end == NULL || orelse == NULL) {
         return 0;
     }
 
-    // if (asdl_seq_LEN(s->v.If.orelse)) {
-    //     ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
+    n = asdl_seq_LEN(s->v.Switch.handlers); // Get how many kases there are
+    
+    VISIT(c, expr, s->v.Switch.value);      // Evaluates the switch expr and pushes the result onto the stack
 
-    //     compiler_use_next_block(c, next);
+    // If there are kases, prepare initial values for loop
+    if (n > 0) {
+        next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
+        bb_next_kase = compiler_new_block(c);
+        if (bb_next_kase == NULL) {
+            return 0;
+        }
+    }
 
-    //     VISIT_SEQ(c, stmt, s->v.If.orelse);
-    // }
+    for (i = 0; i < n; i++) {
+        kase = next_kase;
+        bb_kase = bb_next_kase;
+
+        if (i < n-1) { // If not last kase
+            next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
+            bb_next_kase = compiler_new_block(c);
+        }
+
+        compiler_use_next_block(c, bb_kase);                // Begin putting OPs in specified BB
+
+        ADDOP(c, DUP_TOP);                                  // Duplicates the value at the top of the stack, which is the switch expr result
+        VISIT(c, expr, kase->v.KaseHandler.value);          // Evaluates the kase expr and pushes the result onto the stack
+        compiler_addcompare(c, Eq);                         // Compares the top two values on the stack for equality. Pushes the result to the stack.
+
+        if (i < n-1) {                                      // Not the last kase
+            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, bb_next_kase); // If not equal, jump to next kase.
+            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
+            
+            VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
+        } else {                                            // Last kase
+            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, orelse);       // If not equal, jump to else. (It's ok if there is no else block. We created this BB so we can use it.)
+            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
+            
+            VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
+
+            ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);        // Jump to the end from here because this was the last one.
+
+            compiler_use_next_block(c, orelse);             // This is why it's ok if there's no else block. We use it to clean up other values regardless.
+
+            ADDOP(c, POP_TOP);                              // Clean up comparison result.
+
+            if (s->v.Switch.orelse != NULL) {
+                VISIT_SEQ(c, stmt, s->v.Switch.orelse);     // Run the else block if it exists.
+            }
+        }
+
+        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);            // Add final jump-to-end for either non-last kase or else.
+    }
 
     compiler_use_next_block(c, end);
     return 1;

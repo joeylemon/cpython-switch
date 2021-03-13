@@ -2768,8 +2768,6 @@ compiler_if(struct compiler *c, stmt_ty s)
     //
     // NOTE: here we'd have to compare Switch.value to Kase.value somehow, or adopt
     //       a different method
-    // NOTE: we can do that with ADDOP_I(c, COMPARE_OP, PyCmp_EQ) if we push the
-    //       test values beforehand
     if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
         return 0;
     }
@@ -2813,18 +2811,17 @@ compiler_switch(struct compiler *c, stmt_ty s)
     if (end == NULL || orelse == NULL) {
         return 0;
     }
-
-    n = asdl_seq_LEN(s->v.Switch.handlers); // Get how many kases there are
     
     VISIT(c, expr, s->v.Switch.value);      // Evaluates the switch expr and pushes the result onto the stack
 
-    // If there are kases, prepare initial values for loop
-    if (n > 0) {
-        next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
-        bb_next_kase = compiler_new_block(c);
-        if (bb_next_kase == NULL) {
-            return 0;
-        }
+    n = asdl_seq_LEN(s->v.Switch.handlers); // Get how many kases there are
+
+    assert(n > 0);                          // There should always be at least one kase
+
+    next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
+    bb_next_kase = compiler_new_block(c);
+    if (bb_next_kase == NULL) {
+        return 0;
     }
 
     for (i = 0; i < n; i++) {
@@ -2834,6 +2831,9 @@ compiler_switch(struct compiler *c, stmt_ty s)
         if (i < n-1) { // If not last kase
             next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
             bb_next_kase = compiler_new_block(c);
+            if (bb_next_kase == NULL) {
+                return 0;
+            }
         }
 
         compiler_use_next_block(c, bb_kase);                // Begin putting OPs in specified BB
@@ -2844,21 +2844,19 @@ compiler_switch(struct compiler *c, stmt_ty s)
 
         if (i < n-1) {                                      // Not the last kase
             ADDOP_JUMP(c, POP_JUMP_IF_FALSE, bb_next_kase); // If not equal, jump to next kase.
-            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
             
+            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
             VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
         } else {                                            // Last kase
             ADDOP_JUMP(c, POP_JUMP_IF_FALSE, orelse);       // If not equal, jump to else. (It's ok if there is no else block. We created this BB so we can use it.)
-            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
             
+            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
             VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
-
             ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);        // Jump to the end from here because this was the last one.
 
             compiler_use_next_block(c, orelse);             // This is why it's ok if there's no else block. We use it to clean up other values regardless.
 
             ADDOP(c, POP_TOP);                              // Clean up comparison result.
-
             if (s->v.Switch.orelse != NULL) {
                 VISIT_SEQ(c, stmt, s->v.Switch.orelse);     // Run the else block if it exists.
             }

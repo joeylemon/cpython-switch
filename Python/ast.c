@@ -398,9 +398,8 @@ validate_stmt(stmt_ty stmt)
     case Switch_kind:
         if (!validate_expr(stmt->v.Switch.value, Load))
             return 0;
-        if (!asdl_seq_LEN(stmt->v.Switch.handlers) &&
-            !asdl_seq_LEN(stmt->v.Switch.orelse)) {
-            PyErr_SetString(PyExc_ValueError, "Switch has neither kases nor else");
+        if (!asdl_seq_LEN(stmt->v.Switch.handlers)) {
+            PyErr_SetString(PyExc_ValueError, "Switch has no kases");
             return 0;
         }
         for (i = 0; i < asdl_seq_LEN(stmt->v.Switch.handlers); i++) {

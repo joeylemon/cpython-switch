@@ -2796,11 +2796,12 @@ compiler_if(struct compiler *c, stmt_ty s)
 static int
 compiler_switch(struct compiler *c, stmt_ty s)
 {
-    int i;
-    int n;
-    kasehandler_ty kase, next_kase;
-    basicblock *bb_kase, *bb_next_kase;
-    basicblock *end, *orelse;
+    int i, n;
+    int is_last_kase;
+    kasehandler_ty  kase, next_kase;
+    basicblock  *bb_kase_test, *bb_kase_body,
+                *bb_next_kase_test, *bb_next_kase_body,
+                *end, *orelse;
 
     assert(s->kind == Switch_kind);
 
@@ -2819,53 +2820,61 @@ compiler_switch(struct compiler *c, stmt_ty s)
     assert(n > 0);                          // There should always be at least one kase
 
     next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
-    bb_next_kase = compiler_new_block(c);
-    if (bb_next_kase == NULL) {
+    bb_next_kase_test = compiler_new_block(c);
+    bb_next_kase_body = compiler_new_block(c);
+    if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
         return 0;
     }
-
+    
     for (i = 0; i < n; i++) {
         kase = next_kase;
-        bb_kase = bb_next_kase;
+        bb_kase_test = bb_next_kase_test;
+        bb_kase_body = bb_next_kase_body;
 
-        if (i < n-1) { // If not last kase
+        is_last_kase = (i == n-1);
+        if (!is_last_kase) {
             next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
-            bb_next_kase = compiler_new_block(c);
-            if (bb_next_kase == NULL) {
+            bb_next_kase_test = compiler_new_block(c);
+            bb_next_kase_body = compiler_new_block(c);
+            if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
                 return 0;
             }
         }
 
-        compiler_use_next_block(c, bb_kase);                // Begin putting OPs in specified BB
-
-        ADDOP(c, DUP_TOP);                                  // Duplicates the value at the top of the stack, which is the switch expr result
+        compiler_use_next_block(c, bb_kase_test);           // Begin putting operations in specified BB and have the previous block fall through to this one.
+        if (i != 0) {
+            ADDOP(c, POP_TOP);                              // If not the first kase, pop the previous comparison result off the stack.
+        }
+        //ADDOP(c, DUP_TOP);                                // Duplicates the value at the top of the stack, which is the switch expr result
         VISIT(c, expr, kase->v.KaseHandler.value);          // Evaluates the kase expr and pushes the result onto the stack
         compiler_addcompare(c, Eq);                         // Compares the top two values on the stack for equality. Pushes the result to the stack.
+        ADDOP_JUMP(c, POP_JUMP_IF_TRUE, bb_kase_body);      // If equal, run kase body.
 
-        if (i < n-1) {                                      // Not the last kase
-            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, bb_next_kase); // If not equal, jump to next kase.
-            
-            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
-            VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
-        } else {                                            // Last kase
-            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, orelse);       // If not equal, jump to else. (It's ok if there is no else block. We created this BB so we can use it.)
-            
-            ADDOP(c, POP_TOP);                              // Otherwise, remove top item from stack, which would be the equality comparison result.
-            VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);   // And run the kase block.
-            ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);        // Jump to the end from here because this was the last one.
-
-            compiler_use_next_block(c, orelse);             // This is why it's ok if there's no else block. We use it to clean up other values regardless.
-
-            ADDOP(c, POP_TOP);                              // Clean up comparison result.
+        if (!is_last_kase) {
+            compiler_use_next_block(c, bb_next_kase_test);  // If not equal and more kases, fall through to next kase test.
+        } else {
+            compiler_use_next_block(c, orelse);             // If not equal and no more kases, fall through to else. (It's ok if there is no else block. We created this BB so we can use it.)
+            ADDOP(c, POP_TOP);                              // Pop the last kase expr result.
+            ADDOP(c, POP_TOP);                              // Pop the initial switch expr result.
             if (s->v.Switch.orelse != NULL) {
                 VISIT_SEQ(c, stmt, s->v.Switch.orelse);     // Run the else block if it exists.
             }
+            
+            compiler_use_next_block(c, end);                // From else, fall through to after the switch.
         }
 
-        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);            // Add final jump-to-end for either non-last kase or else.
+        c->u->u_curblock = bb_kase_body;                    // Manually set current block because there's no function which does this without setting b_next (used for fall-through).
+        ADDOP(c, POP_TOP);
+        ADDOP(c, POP_TOP);
+        VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);       // And run the kase block.
+
+        compiler_use_next_block(c, end);                    // Fall through from kase body to after the switch.
+
+        c->u->u_curblock = bb_kase_test;                    // Manually set current block to kase_test so it will fall through to next_kase_test on next loop iter.
     }
 
-    compiler_use_next_block(c, end);
+    c->u->u_curblock = end;
+
     return 1;
 }
 

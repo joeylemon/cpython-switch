@@ -5624,6 +5624,7 @@ stackdepth(struct compiler *c)
                 maxdepth = new_depth;
             }
             assert(depth >= 0); /* invalid code or bug in stackdepth() */
+            printf("instr with code %-17u on line %02d leads to stack depth of %d\n", instr->i_opcode, instr->i_lineno, new_depth);
             if (is_jump(instr)) {
                 effect = stack_effect(instr->i_opcode, instr->i_oparg, 1);
                 assert(effect != PY_INVALID_STACK_EFFECT);

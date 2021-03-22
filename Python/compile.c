@@ -2813,6 +2813,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
         return 0;
     }
     
+    printf("%s\n", "Eval switch expr...");
     VISIT(c, expr, s->v.Switch.value);      // Evaluates the switch expr and pushes the result onto the stack
 
     n = asdl_seq_LEN(s->v.Switch.handlers); // Get how many kases there are
@@ -2842,38 +2843,34 @@ compiler_switch(struct compiler *c, stmt_ty s)
         }
 
         compiler_use_next_block(c, bb_kase_test);           // Begin putting operations in specified BB and have the previous block fall through to this one.
-        if (i != 0) {
-            ADDOP(c, POP_TOP);                              // If not the first kase, pop the previous comparison result off the stack.
-        }
-        //ADDOP(c, DUP_TOP);                                // Duplicates the value at the top of the stack, which is the switch expr result
+        ADDOP(c, DUP_TOP);                                  // Duplicates the value at the top of the stack, which is the switch expr result
+        printf("Eval kase #%d expr...\n", i);
         VISIT(c, expr, kase->v.KaseHandler.value);          // Evaluates the kase expr and pushes the result onto the stack
-        compiler_addcompare(c, Eq);                         // Compares the top two values on the stack for equality. Pushes the result to the stack.
+        compiler_addcompare(c, Eq);                         // Compares the top two values on the stack for equality. Pops both operands and pushes the result to the stack.
         ADDOP_JUMP(c, POP_JUMP_IF_TRUE, bb_kase_body);      // If equal, run kase body.
 
         if (!is_last_kase) {
             compiler_use_next_block(c, bb_next_kase_test);  // If not equal and more kases, fall through to next kase test.
         } else {
             compiler_use_next_block(c, orelse);             // If not equal and no more kases, fall through to else. (It's ok if there is no else block. We created this BB so we can use it.)
-            ADDOP(c, POP_TOP);                              // Pop the last kase expr result.
             ADDOP(c, POP_TOP);                              // Pop the initial switch expr result.
             if (s->v.Switch.orelse != NULL) {
+                printf("%s\n", "Run else body...");
                 VISIT_SEQ(c, stmt, s->v.Switch.orelse);     // Run the else block if it exists.
             }
             
-            compiler_use_next_block(c, end);                // From else, fall through to after the switch.
+            ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);        // Unconditionally jump to end instead of fall-through. This is to avoid manually setting the current block.
         }
 
-        c->u->u_curblock = bb_kase_body;                    // Manually set current block because there's no function which does this without setting b_next (used for fall-through).
+        compiler_use_next_block(c, bb_kase_body);
         ADDOP(c, POP_TOP);
-        ADDOP(c, POP_TOP);
+        printf("Run kase #%d body...\n", i);
         VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);       // And run the kase block.
 
-        compiler_use_next_block(c, end);                    // Fall through from kase body to after the switch.
-
-        c->u->u_curblock = bb_kase_test;                    // Manually set current block to kase_test so it will fall through to next_kase_test on next loop iter.
+        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
     }
 
-    c->u->u_curblock = end;
+    compiler_use_next_block(c, end);
 
     return 1;
 }

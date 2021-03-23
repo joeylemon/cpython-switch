@@ -1816,6 +1816,7 @@ tok_get(struct tok_state *tok, const char **p_start, const char **p_end)
         tok_backup(tok, c2);
     }
 
+
     /* Keep track of parentheses nesting level */
     switch (c) {
     case '(':

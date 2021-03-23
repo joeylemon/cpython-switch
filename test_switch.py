@@ -1,20 +1,11 @@
-if True:
-    print("true")
-elif False:
-    print("false")
-else:
-    print("huh")
+x = 2
 
-switch 0:
-    kase 0:
-        print("sup")
-        pass
-    kase 0:
-        print("sup")
-        pass
-    kase 0:
-        print("sup")
-        pass
+switch x:
+    kase 1:
+        print("It's one")
+    kase 2:
+        print("It's two")
+    kase 3:
+        print("It's three")
     else:
-        print("sup")
-        pass
+        print("It's none")

@@ -1,5 +1,6 @@
 x = 2
 
+
 switch x:
     kase 1:
         print("It's one")

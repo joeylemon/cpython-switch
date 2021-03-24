@@ -1234,18 +1234,13 @@ class GrammarTests(unittest.TestCase):
     
     def test_switch(self):
         switch 0:
-            else: pass
-        switch 0:
             kase 0: pass
         switch 0:
             kase 0: pass
             kase 0: pass
             kase 0: pass
             else: pass
-        
-        switch 0:
-            else:
-                pass
+
         switch 0:
             kase 0:
                 pass

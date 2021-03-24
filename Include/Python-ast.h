@@ -34,6 +34,8 @@ typedef struct _comprehension *comprehension_ty;
 
 typedef struct _excepthandler *excepthandler_ty;
 
+typedef struct _kasehandler *kasehandler_ty;
+
 typedef struct _arguments *arguments_ty;
 
 typedef struct _arg *arg_ty;
@@ -83,6 +85,14 @@ typedef struct {
 
 asdl_excepthandler_seq *_Py_asdl_excepthandler_seq_new(Py_ssize_t size, PyArena
                                                        *arena);
+
+typedef struct {
+    _ASDL_SEQ_HEAD
+    kasehandler_ty typed_elements[1];
+} asdl_kasehandler_seq;
+
+asdl_kasehandler_seq *_Py_asdl_kasehandler_seq_new(Py_ssize_t size, PyArena
+                                                   *arena);
 
 typedef struct {
     _ASDL_SEQ_HEAD
@@ -158,10 +168,10 @@ enum _stmt_kind {FunctionDef_kind=1, AsyncFunctionDef_kind=2, ClassDef_kind=3,
                   Return_kind=4, Delete_kind=5, Assign_kind=6,
                   AugAssign_kind=7, AnnAssign_kind=8, For_kind=9,
                   AsyncFor_kind=10, While_kind=11, If_kind=12, Switch_kind=13,
-                  Kase_kind=14, With_kind=15, AsyncWith_kind=16, Raise_kind=17,
-                  Try_kind=18, Assert_kind=19, Import_kind=20,
-                  ImportFrom_kind=21, Global_kind=22, Nonlocal_kind=23,
-                  Expr_kind=24, Pass_kind=25, Break_kind=26, Continue_kind=27};
+                  With_kind=14, AsyncWith_kind=15, Raise_kind=16, Try_kind=17,
+                  Assert_kind=18, Import_kind=19, ImportFrom_kind=20,
+                  Global_kind=21, Nonlocal_kind=22, Expr_kind=23, Pass_kind=24,
+                  Break_kind=25, Continue_kind=26};
 struct _stmt {
     enum _stmt_kind kind;
     union {
@@ -248,14 +258,9 @@ struct _stmt {
 
         struct {
             expr_ty value;
-            asdl_stmt_seq *body;
+            asdl_kasehandler_seq *handlers;
+            asdl_stmt_seq *orelse;
         } Switch;
-
-        struct {
-            expr_ty value;
-            asdl_stmt_seq *body;
-            asdl_stmt_seq *orsdefault;
-        } Kase;
 
         struct {
             asdl_withitem_seq *items;
@@ -496,6 +501,22 @@ struct _excepthandler {
     int end_col_offset;
 };
 
+enum _kasehandler_kind {KaseHandler_kind=1};
+struct _kasehandler {
+    enum _kasehandler_kind kind;
+    union {
+        struct {
+            expr_ty value;
+            asdl_stmt_seq *body;
+        } KaseHandler;
+
+    } v;
+    int lineno;
+    int col_offset;
+    int end_lineno;
+    int end_col_offset;
+};
+
 struct _arguments {
     asdl_arg_seq *posonlyargs;
     asdl_arg_seq *args;
@@ -610,14 +631,10 @@ stmt_ty _Py_While(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse,
 stmt_ty _Py_If(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse, int
                lineno, int col_offset, int end_lineno, int end_col_offset,
                PyArena *arena);
-#define Switch(a0, a1, a2, a3, a4, a5, a6) _Py_Switch(a0, a1, a2, a3, a4, a5, a6)
-stmt_ty _Py_Switch(expr_ty value, asdl_stmt_seq * body, int lineno, int
-                   col_offset, int end_lineno, int end_col_offset, PyArena
-                   *arena);
-#define Kase(a0, a1, a2, a3, a4, a5, a6, a7) _Py_Kase(a0, a1, a2, a3, a4, a5, a6, a7)
-stmt_ty _Py_Kase(expr_ty value, asdl_stmt_seq * body, asdl_stmt_seq *
-                 orsdefault, int lineno, int col_offset, int end_lineno, int
-                 end_col_offset, PyArena *arena);
+#define Switch(a0, a1, a2, a3, a4, a5, a6, a7) _Py_Switch(a0, a1, a2, a3, a4, a5, a6, a7)
+stmt_ty _Py_Switch(expr_ty value, asdl_kasehandler_seq * handlers,
+                   asdl_stmt_seq * orelse, int lineno, int col_offset, int
+                   end_lineno, int end_col_offset, PyArena *arena);
 #define With(a0, a1, a2, a3, a4, a5, a6, a7) _Py_With(a0, a1, a2, a3, a4, a5, a6, a7)
 stmt_ty _Py_With(asdl_withitem_seq * items, asdl_stmt_seq * body, string
                  type_comment, int lineno, int col_offset, int end_lineno, int
@@ -770,6 +787,10 @@ excepthandler_ty _Py_ExceptHandler(expr_ty type, identifier name, asdl_stmt_seq
                                    * body, int lineno, int col_offset, int
                                    end_lineno, int end_col_offset, PyArena
                                    *arena);
+#define KaseHandler(a0, a1, a2, a3, a4, a5, a6) _Py_KaseHandler(a0, a1, a2, a3, a4, a5, a6)
+kasehandler_ty _Py_KaseHandler(expr_ty value, asdl_stmt_seq * body, int lineno,
+                               int col_offset, int end_lineno, int
+                               end_col_offset, PyArena *arena);
 #define arguments(a0, a1, a2, a3, a4, a5, a6, a7) _Py_arguments(a0, a1, a2, a3, a4, a5, a6, a7)
 arguments_ty _Py_arguments(asdl_arg_seq * posonlyargs, asdl_arg_seq * args,
                            arg_ty vararg, asdl_arg_seq * kwonlyargs,

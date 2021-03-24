@@ -396,8 +396,21 @@ validate_stmt(stmt_ty stmt)
             validate_body(stmt->v.If.body, "If") &&
             validate_stmts(stmt->v.If.orelse);
     case Switch_kind:
-        return validate_expr(stmt->v.Switch.value, Load) &&
-            validate_body(stmt->v.Switch.body, "Switch");
+        if (!validate_expr(stmt->v.Switch.value, Load))
+            return 0;
+        if (!asdl_seq_LEN(stmt->v.Switch.handlers)) {
+            PyErr_SetString(PyExc_ValueError, "Switch has no kases");
+            return 0;
+        }
+        for (i = 0; i < asdl_seq_LEN(stmt->v.Switch.handlers); i++) {
+            kasehandler_ty handler = asdl_seq_GET(stmt->v.Switch.handlers, i);
+            if ((handler->v.KaseHandler.value &&
+                 !validate_expr(handler->v.KaseHandler.value, Load)) ||
+                !validate_body(handler->v.KaseHandler.body, "KaseHandler"))
+                return 0;
+        }
+        return (!asdl_seq_LEN(stmt->v.Switch.orelse) ||
+                validate_stmts(stmt->v.Switch.orelse));
     case With_kind:
         if (!validate_nonempty_seq(stmt->v.With.items, "items", "With"))
             return 0;

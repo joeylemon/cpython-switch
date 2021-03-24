@@ -2720,15 +2720,39 @@ compiler_lambda(struct compiler *c, expr_ty e)
     return 1;
 }
 
+// From the Python devguide (https://devguide.python.org/compiler/):
+// As an example, consider an ‘if’ statement with an ‘else’ block. The guard on the ‘if’ is a basic block
+// which is pointed to by the basic block containing the code leading to the ‘if’ statement. The ‘if’ statement
+// block contains jumps (which are exit points) to the true body of the ‘if’ and the ‘else’ body (which may be NULL),
+// each of which are their own basic blocks. Both of those blocks in turn point to the basic block representing the 
+// code following the entire ‘if’ statement.
 static int
 compiler_if(struct compiler *c, stmt_ty s)
 {
     basicblock *end, *next;
+
+    // make sure the given statement is actually an if-statement
     assert(s->kind == If_kind);
+
+    // printf("\ncompile if statement\n");
+    // printf("s->v.If.body addr: %p\n", s->v.If.body);
+    // printf("s->v.If.body size: %ld\n", asdl_seq_LEN(s->v.If.body));
+
+    // compiler_new_block is used to "create a block but don’t use it (used for generating jumps)"
     end = compiler_new_block(c);
     if (end == NULL) {
         return 0;
     }
+
+    // here the compiler is checking if the if-statement has an else block
+    // if it does, create a new block to jump to if the if-statement test fails
+    //
+    // QUESTION: how can we adopt this for kases?
+    // NOTE: This isn't only for else blocks. According to the grammar, orelse can be one of 4 things:
+    //          1. A list of elif stmts.
+    //          2. A list of elif stmts with an else block.
+    //          3. An else block.
+    //          4. NULL.
     if (asdl_seq_LEN(s->v.If.orelse)) {
         next = compiler_new_block(c);
         if (next == NULL) {
@@ -2738,16 +2762,129 @@ compiler_if(struct compiler *c, stmt_ty s)
     else {
         next = end;
     }
+
+    // here we can see the compiler is jumping to the else block generated above
+    // if the if-statement test fails
+    //
+    // NOTE: here we'd have to compare Switch.value to Kase.value somehow, or adopt
+    //       a different method
     if (!compiler_jump_if(c, s->v.If.test, next, 0)) {
         return 0;
     }
+
+    // otherwise, if the if-statement test succeeds, move to body
+    // it seems this macro evaluates the if-statement body
     VISIT_SEQ(c, stmt, s->v.If.body);
+
+    // if the if-statement has an else block,
     if (asdl_seq_LEN(s->v.If.orelse)) {
+        // add the opcode to jump to the end block
         ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);
+
+        // set the current block to the "next" block
         compiler_use_next_block(c, next);
+
+        // evaluate the else statement
         VISIT_SEQ(c, stmt, s->v.If.orelse);
     }
+
+    // set the current block to the "end" block
     compiler_use_next_block(c, end);
+    return 1;
+}
+
+static int
+compiler_switch(struct compiler *c, stmt_ty s)
+{
+    int i, n;
+    int is_last_kase;
+    kasehandler_ty  kase, next_kase;
+    basicblock  *bb_kase_test, *bb_kase_body,
+                *bb_next_kase_test, *bb_next_kase_body,
+                *end, *orelse;
+
+    assert(s->kind == Switch_kind);
+
+    // printf("\ncompile switch statement\n");
+
+    end = compiler_new_block(c);
+    orelse = compiler_new_block(c);
+    if (end == NULL || orelse == NULL) {
+        return 0;
+    }
+    
+    VISIT(c, expr, s->v.Switch.value);      // Evaluates the switch expr and pushes the result onto the stack
+
+    n = asdl_seq_LEN(s->v.Switch.handlers); // Get how many kases there are
+
+    assert(n > 0);                          // There should always be at least one kase
+
+    next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
+    bb_next_kase_test = compiler_new_block(c);  // We refer to this directly in some jumps.
+    bb_next_kase_body = compiler_new_block(c);  // We never refer to this directly, but it's here bc I think it makes the iteration more understandable.
+    if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
+        return 0;
+    }
+    
+    /*
+    BasicBlock Fall-Through Control Flow:
+    
+    BEGIN -> kase_1_test -> kase_1_body -> kase_2_test -> kase_2_body -> ... -> kase_n_test -> kase_n_body -> orelse -> END
+    
+    BasicBlock Jump Control Flow:
+
+    kase_1_test JUMP_IF_FALSE -> kase_2_test JUMP_IF_FALSE -> ...
+
+    kase_1_body JUMP_ALWAYS -> END
+    kase_2_body JUMP_ALWAYS -> END
+    ...
+
+    orelse JUMP_ALWAYS -> END
+    */
+    
+    for (i = 0; i < n; i++) {
+        kase = next_kase;
+        bb_kase_test = bb_next_kase_test;
+        bb_kase_body = bb_next_kase_body;
+
+        is_last_kase = (i == n-1);
+        if (!is_last_kase) {
+            next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
+            bb_next_kase_test = compiler_new_block(c);
+            bb_next_kase_body = compiler_new_block(c);
+            if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
+                return 0;
+            }
+        }
+
+        compiler_use_next_block(c, bb_kase_test);                   // Begin putting operations in specified BB and have the previous block fall through to this one.
+        ADDOP(c, DUP_TOP);                                          // Duplicates the value at the top of the stack, which is the switch expr result
+        VISIT(c, expr, kase->v.KaseHandler.value);                  // Evaluates the kase expr and pushes the result onto the stack
+        compiler_addcompare(c, Eq);                                 // Compares the top two values on the stack for equality. Pops both operands and pushes the result to the stack.
+        if (!is_last_kase) {                                        // If not equal, jump to next kase test (or else if last kase).
+            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, bb_next_kase_test);
+        } else {
+            ADDOP_JUMP(c, POP_JUMP_IF_FALSE, orelse);
+        }
+
+        compiler_use_next_block(c, bb_kase_body);
+        ADDOP(c, POP_TOP);                                          // Pop initial switch expr result.
+        VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);               // Run kase body
+        ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);                    // Unconditional jump to end. We can't fall-through here bc we might still have to handle more kases,
+                                                                    // and we don't want end to fall-through to bb_next_kase_test.
+
+        if (is_last_kase) {
+            compiler_use_next_block(c, orelse);             // (It's ok if there is no else block. We create this no matter what so we can use it.)
+            ADDOP(c, POP_TOP);                              // Pop the initial switch expr result.
+            if (s->v.Switch.orelse != NULL) {
+                VISIT_SEQ(c, stmt, s->v.Switch.orelse);     // Run the else block if it exists.
+            }
+            ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);        // We can probably fall-through here bc it's the last block in the last iter of the loop, but why risk it?
+        }
+    }
+
+    compiler_use_next_block(c, end);
+
     return 1;
 }
 
@@ -3414,6 +3551,8 @@ compiler_visit_stmt(struct compiler *c, stmt_ty s)
         return compiler_while(c, s);
     case If_kind:
         return compiler_if(c, s);
+    case Switch_kind:
+        return compiler_switch(c, s);
     case Raise_kind:
         n = 0;
         if (s->v.Raise.exc) {
@@ -5495,6 +5634,7 @@ stackdepth(struct compiler *c)
                 maxdepth = new_depth;
             }
             assert(depth >= 0); /* invalid code or bug in stackdepth() */
+            //printf("instr with code %-17u on line %02d leads to stack depth of %d\n", instr->i_opcode, instr->i_lineno, new_depth);
             if (is_jump(instr)) {
                 effect = stack_effect(instr->i_opcode, instr->i_oparg, 1);
                 assert(effect != PY_INVALID_STACK_EFFECT);

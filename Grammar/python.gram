@@ -173,15 +173,9 @@ elif_stmt[stmt_ty]:
 else_block[asdl_stmt_seq*]: 'else' &&':' b=block { b }
 
 switch_stmt[stmt_ty]:
-    | 'switch' a=named_expression &&':' b=switch_block { _Py_Switch(a, b, EXTRA) }
-kase_stmt[stmt_ty]:
-    | 'kase' a=named_expression &&':' b=block c=kase_stmt {
-        _Py_Kase(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-    | 'kase' a=named_expression &&':' b=block c=[else_block] { _Py_Kase(a, b, c, EXTRA) }
-
-switch_block[asdl_stmt_seq*] (memo):
-    | NEWLINE INDENT a=kase_stmt DEDENT { a }
-    | NEWLINE INDENT a=[else_block] DEDENT { a }
+    | 'switch' a=named_expression &&':' NEWLINE INDENT b[asdl_kasehandler_seq*]=kase_block+ c=[else_block] DEDENT { _Py_Switch(a, b, c, EXTRA) }
+kase_block[kasehandler_ty]:
+    | 'kase' a=named_expression &&':' b=block { _Py_KaseHandler(a, b, EXTRA) }
 
 while_stmt[stmt_ty]:
     | 'while' a=named_expression &&':' b=block c=[else_block] { _Py_While(a, b, c, EXTRA) }

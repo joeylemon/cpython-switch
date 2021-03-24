@@ -198,6 +198,7 @@ static int symtable_visit_listcomp(struct symtable *st, expr_ty s);
 static int symtable_visit_setcomp(struct symtable *st, expr_ty s);
 static int symtable_visit_dictcomp(struct symtable *st, expr_ty s);
 static int symtable_visit_arguments(struct symtable *st, arguments_ty);
+static int symtable_visit_kasehandler(struct symtable *st, kasehandler_ty kh);
 static int symtable_visit_excepthandler(struct symtable *st, excepthandler_ty);
 static int symtable_visit_alias(struct symtable *st, alias_ty);
 static int symtable_visit_comprehension(struct symtable *st, comprehension_ty);
@@ -1294,6 +1295,12 @@ symtable_visit_stmt(struct symtable *st, stmt_ty s)
         if (s->v.If.orelse)
             VISIT_SEQ(st, stmt, s->v.If.orelse);
         break;
+    case Switch_kind:
+        VISIT(st, expr, s->v.Switch.value);
+        VISIT_SEQ(st, kasehandler, s->v.Switch.handlers);
+        if (s->v.Switch.orelse)
+            VISIT_SEQ(st, stmt, s->v.Switch.orelse);
+        break;
     case Raise_kind:
         if (s->v.Raise.exc) {
             VISIT(st, expr, s->v.Raise.exc);
@@ -1762,6 +1769,13 @@ symtable_visit_arguments(struct symtable *st, arguments_ty a)
     return 1;
 }
 
+static int
+symtable_visit_kasehandler(struct symtable *st, kasehandler_ty kh)
+{
+    VISIT(st, expr, kh->v.KaseHandler.value);
+    VISIT_SEQ(st, stmt, kh->v.KaseHandler.body);
+    return 1;
+}
 
 static int
 symtable_visit_excepthandler(struct symtable *st, excepthandler_ty eh)

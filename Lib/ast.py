@@ -973,6 +973,23 @@ class _Unparser(NodeVisitor):
         with self.block():
             self.traverse(node.body)
 
+    def visit_Switch(self, node):
+        self.fill("switch ")
+        self.traverse(node.value)
+        with self.block():
+            for ex in node.handlers:
+                self.traverse(ex)
+            if node.orelse:
+                self.fill("else")
+                with self.block():
+                    self.traverse(node.orelse)
+
+    def visit_KaseHandler(self, node):
+        self.fill("kase ")
+        self.traverse(node.value)
+        with self.block():
+            self.traverse(node.body)
+
     def visit_ClassDef(self, node):
         self.maybe_newline()
         for deco in node.decorator_list:

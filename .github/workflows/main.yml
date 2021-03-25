@@ -23,9 +23,8 @@ jobs:
       - uses: actions/setup-python@v2
       
       - run: ./configure --with-pydebug
-      - run: make regen-pegen
-      - run: make regen-ast
+      - run: make regen-all
       
       - run: make -j
       
-      - run: ./python -m test -j0
+      - run: ./python -m test -j0 --exclude test_ssl test_venv

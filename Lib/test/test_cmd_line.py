@@ -54,8 +54,8 @@ class CmdLineTest(unittest.TestCase):
 
     def test_version(self):
         version = ('Python %d.%d' % sys.version_info[:2]).encode("ascii")
-        for switch in '-V', '--version', '-VV':
-            rc, out, err = assert_python_ok(switch)
+        for sswitch in '-V', '--version', '-VV':
+            rc, out, err = assert_python_ok(sswitch)
             self.assertFalse(err.startswith(version))
             self.assertTrue(out.startswith(version))
 

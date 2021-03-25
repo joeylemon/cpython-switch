@@ -1849,6 +1849,8 @@ class Helper:
         'while': ('while', 'break continue if TRUTHVALUE'),
         'with': ('with', 'CONTEXTMANAGERS EXCEPTIONS yield'),
         'yield': ('yield', ''),
+        'switch': '',
+        'kase': '',
     }
     # Either add symbols to this dictionary or to the symbols dictionary
     # directly: Whichever is easier. They are merged later.

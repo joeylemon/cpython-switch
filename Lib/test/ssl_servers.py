@@ -147,7 +147,7 @@ class HTTPSServerThread(threading.Thread):
         self.server.shutdown()
 
 
-def make_https_server(case, *, context=None, certfile=CERTFILE,
+def make_https_server(testcase, *, context=None, certfile=CERTFILE,
                       host=HOST, handler_class=None):
     if context is None:
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -164,7 +164,7 @@ def make_https_server(case, *, context=None, certfile=CERTFILE,
         if support.verbose:
             sys.stdout.write('joining HTTPS thread\n')
         server.join()
-    case.addCleanup(cleanup)
+    testcase.addCleanup(cleanup)
     return server
 
 

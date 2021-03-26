@@ -1424,9 +1424,9 @@ class MathTests(unittest.TestCase):
             '0x1.fp+1023 0x1.4p+1023 -0x0.9p+1023',
         ]
 
-        for case in testcases:
-            with self.subTest(case=case):
-                x_hex, y_hex, expected_hex = case.split()
+        for obj in testcases:
+            with self.subTest(testcase=obj):
+                x_hex, y_hex, expected_hex = obj.split()
                 x = float.fromhex(x_hex)
                 y = float.fromhex(y_hex)
                 expected = float.fromhex(expected_hex)

@@ -872,7 +872,7 @@ class TestBasicOps:
 
 class TestBasicOpsEmpty(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "empty set"
+        self.kase   = "empty set"
         self.values = []
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -883,7 +883,7 @@ class TestBasicOpsEmpty(TestBasicOps, unittest.TestCase):
 
 class TestBasicOpsSingleton(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "unit set (number)"
+        self.kase   = "unit set (number)"
         self.values = [3]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -900,7 +900,7 @@ class TestBasicOpsSingleton(TestBasicOps, unittest.TestCase):
 
 class TestBasicOpsTuple(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "unit set (tuple)"
+        self.kase   = "unit set (tuple)"
         self.values = [(0, "zero")]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -917,7 +917,7 @@ class TestBasicOpsTuple(TestBasicOps, unittest.TestCase):
 
 class TestBasicOpsTriple(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "triple set"
+        self.kase   = "triple set"
         self.values = [0, "zero", operator.add]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -928,7 +928,7 @@ class TestBasicOpsTriple(TestBasicOps, unittest.TestCase):
 
 class TestBasicOpsString(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "string set"
+        self.kase   = "string set"
         self.values = ["a", "b", "c"]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -941,7 +941,7 @@ class TestBasicOpsString(TestBasicOps, unittest.TestCase):
 
 class TestBasicOpsBytes(TestBasicOps, unittest.TestCase):
     def setUp(self):
-        self.case   = "bytes set"
+        self.kase   = "bytes set"
         self.values = [b"a", b"b", b"c"]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -957,7 +957,7 @@ class TestBasicOpsMixedStringBytes(TestBasicOps, unittest.TestCase):
         self._warning_filters = warnings_helper.check_warnings()
         self._warning_filters.__enter__()
         warnings.simplefilter('ignore', BytesWarning)
-        self.case   = "string and bytes set"
+        self.kase   = "string and bytes set"
         self.values = ["a", "b", b"a", b"b"]
         self.set    = set(self.values)
         self.dup    = set(self.values)
@@ -1268,19 +1268,19 @@ class TestSubsets:
     def test_issubset(self):
         x = self.left
         y = self.right
-        for case in "!=", "==", "<", "<=", ">", ">=":
-            expected = case in self.cases
+        for obj in "!=", "==", "<", "<=", ">", ">=":
+            expected = obj in self.cases
             # Test the binary infix spelling.
-            result = eval("x" + case + "y", locals())
+            result = eval("x" + obj + "y", locals())
             self.assertEqual(result, expected)
             # Test the "friendly" method-name spelling, if one exists.
-            if case in TestSubsets.case2method:
-                method = getattr(x, TestSubsets.case2method[case])
+            if obj in TestSubsets.case2method:
+                method = getattr(x, TestSubsets.case2method[obj])
                 result = method(y)
                 self.assertEqual(result, expected)
 
             # Now do the same for the operands reversed.
-            rcase = TestSubsets.reverse[case]
+            rcase = TestSubsets.reverse[obj]
             result = eval("y" + rcase + "x", locals())
             self.assertEqual(result, expected)
             if rcase in TestSubsets.case2method:

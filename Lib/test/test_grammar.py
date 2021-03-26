@@ -782,8 +782,8 @@ class GrammarTests(unittest.TestCase):
         ]
         for keyword in keywords:
             custom_msg = "call to '{}'".format(keyword)
-            for case in cases:
-                source = case.format(keyword)
+            for obj in cases:
+                source = obj.format(keyword)
                 with self.subTest(source=source):
                     with self.assertRaisesRegex(SyntaxError, custom_msg):
                         exec(source)
@@ -1234,30 +1234,30 @@ class GrammarTests(unittest.TestCase):
 
     def test_switch(self):
         switch 1:
-            kase 0:
-                self.fail("matched incorrect kase")
-            kase 1:
+            case 0:
+                self.fail("matched incorrect case")
+            case 1:
                 pass
             else:
-                self.fail("matched incorrect kase")
+                self.fail("matched incorrect case")
         
         switch 0:
-            kase 0: pass
+            case 0: pass
         switch 0:
-            kase 0: pass
-            kase 0: pass
-            kase 0: pass
+            case 0: pass
+            case 0: pass
+            case 0: pass
             else: pass
 
         switch 0:
-            kase 0:
+            case 0:
                 pass
         switch 0:
-            kase 0:
+            case 0:
                 pass
-            kase 0:
+            case 0:
                 pass
-            kase 0:
+            case 0:
                 pass
             else:
                 pass

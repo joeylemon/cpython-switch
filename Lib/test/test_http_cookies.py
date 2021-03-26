@@ -50,12 +50,12 @@ class CookieTests(unittest.TestCase):
             }
         ]
 
-        for case in cases:
+        for testcase in cases:
             C = cookies.SimpleCookie()
-            C.load(case['data'])
-            self.assertEqual(repr(C), case['repr'])
-            self.assertEqual(C.output(sep='\n'), case['output'])
-            for k, v in sorted(case['dict'].items()):
+            C.load(testcase['data'])
+            self.assertEqual(repr(C), testcase['repr'])
+            self.assertEqual(C.output(sep='\n'), testcase['output'])
+            for k, v in sorted(testcase['dict'].items()):
                 self.assertEqual(C[k].value, v)
 
     def test_load(self):

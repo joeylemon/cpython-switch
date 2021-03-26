@@ -2233,9 +2233,9 @@ class DocTestCase(unittest.TestCase):
 
              >>> test = DocTestParser().get_doctest('>>> raise KeyError\n42',
              ...                {}, 'foo', 'foo.py', 0)
-             >>> case = DocTestCase(test)
+             >>> testcase = DocTestCase(test)
              >>> try:
-             ...     case.debug()
+             ...     testcase.debug()
              ... except UnexpectedException as f:
              ...     failure = f
 
@@ -2261,10 +2261,10 @@ class DocTestCase(unittest.TestCase):
              ...      >>> x
              ...      2
              ...      ''', {}, 'foo', 'foo.py', 0)
-             >>> case = DocTestCase(test)
+             >>> testcase = DocTestCase(test)
 
              >>> try:
-             ...    case.debug()
+             ...    testcase.debug()
              ... except DocTestFailure as f:
              ...    failure = f
 

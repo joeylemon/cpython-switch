@@ -2798,7 +2798,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
 {
     int i, n;
     int is_last_kase;
-    kasehandler_ty  kase, next_kase;
+    casehandler_ty kase, next_kase;
     basicblock  *bb_kase_test, *bb_kase_body,
                 *bb_next_kase_test, *bb_next_kase_body,
                 *end, *orelse;
@@ -2819,7 +2819,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
 
     assert(n > 0);                          // There should always be at least one kase
 
-    next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
+    next_kase = (casehandler_ty) asdl_seq_GET(s->v.Switch.handlers, 0);
     bb_next_kase_test = compiler_new_block(c);  // We refer to this directly in some jumps.
     bb_next_kase_body = compiler_new_block(c);  // We never refer to this directly, but it's here bc I think it makes the iteration more understandable.
     if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
@@ -2849,7 +2849,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
 
         is_last_kase = (i == n-1);
         if (!is_last_kase) {
-            next_kase = (kasehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
+            next_kase = (casehandler_ty) asdl_seq_GET(s->v.Switch.handlers, i+1);
             bb_next_kase_test = compiler_new_block(c);
             bb_next_kase_body = compiler_new_block(c);
             if (bb_next_kase_test == NULL || bb_next_kase_body == NULL) {
@@ -2859,7 +2859,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
 
         compiler_use_next_block(c, bb_kase_test);                   // Begin putting operations in specified BB and have the previous block fall through to this one.
         ADDOP(c, DUP_TOP);                                          // Duplicates the value at the top of the stack, which is the switch expr result
-        VISIT(c, expr, kase->v.KaseHandler.value);                  // Evaluates the kase expr and pushes the result onto the stack
+        VISIT(c, expr, kase->v.CaseHandler.value);                  // Evaluates the kase expr and pushes the result onto the stack
         compiler_addcompare(c, Eq);                                 // Compares the top two values on the stack for equality. Pops both operands and pushes the result to the stack.
         if (!is_last_kase) {                                        // If not equal, jump to next kase test (or else if last kase).
             ADDOP_JUMP(c, POP_JUMP_IF_FALSE, bb_next_kase_test);
@@ -2869,7 +2869,7 @@ compiler_switch(struct compiler *c, stmt_ty s)
 
         compiler_use_next_block(c, bb_kase_body);
         ADDOP(c, POP_TOP);                                          // Pop initial switch expr result.
-        VISIT_SEQ(c, stmt, kase->v.KaseHandler.body);               // Run kase body
+        VISIT_SEQ(c, stmt, kase->v.CaseHandler.body);               // Run kase body
         ADDOP_JUMP_NOLINE(c, JUMP_FORWARD, end);                    // Unconditional jump to end. We can't fall-through here bc we might still have to handle more kases,
                                                                     // and we don't want end to fall-through to bb_next_kase_test.
 

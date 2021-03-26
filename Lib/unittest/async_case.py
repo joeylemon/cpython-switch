@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 
-from .case import TestCase
+from .testcase import TestCase
 
 
 

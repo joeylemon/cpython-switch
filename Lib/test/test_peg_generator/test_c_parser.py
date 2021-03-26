@@ -48,13 +48,13 @@ class Tests(unittest.TestCase):
         invalid_cases = (),
     ):
         if valid_cases:
-            for case in valid_cases:
-                parse.parse_string(case, mode=0)
+            for testcase in valid_cases:
+                parse.parse_string(testcase, mode=0)
 
         if invalid_cases:
-            for case in invalid_cases:
+            for testcase in invalid_cases:
                 with self.assertRaises(SyntaxError):
-                    parse.parse_string(case, mode=0)
+                    parse.parse_string(testcase, mode=0)
 
     def verify_ast_generation(self, stmt):
         expected_ast = ast.parse(stmt)

@@ -36,6 +36,7 @@ struct ast_state {
     PyObject *BoolOp_type;
     PyObject *Break_type;
     PyObject *Call_type;
+    PyObject *CaseHandler_type;
     PyObject *ClassDef_type;
     PyObject *Compare_type;
     PyObject *Constant_type;
@@ -78,7 +79,6 @@ struct ast_state {
     PyObject *Is_singleton;
     PyObject *Is_type;
     PyObject *JoinedStr_type;
-    PyObject *KaseHandler_type;
     PyObject *LShift_singleton;
     PyObject *LShift_type;
     PyObject *Lambda_type;
@@ -155,6 +155,7 @@ struct ast_state {
     PyObject *bases;
     PyObject *body;
     PyObject *boolop_type;
+    PyObject *casehandler_type;
     PyObject *cause;
     PyObject *cmpop_type;
     PyObject *col_offset;
@@ -183,7 +184,6 @@ struct ast_state {
     PyObject *is_async;
     PyObject *items;
     PyObject *iter;
-    PyObject *kasehandler_type;
     PyObject *key;
     PyObject *keys;
     PyObject *keyword_type;
@@ -296,6 +296,7 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->BoolOp_type);
     Py_CLEAR(state->Break_type);
     Py_CLEAR(state->Call_type);
+    Py_CLEAR(state->CaseHandler_type);
     Py_CLEAR(state->ClassDef_type);
     Py_CLEAR(state->Compare_type);
     Py_CLEAR(state->Constant_type);
@@ -338,7 +339,6 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->Is_singleton);
     Py_CLEAR(state->Is_type);
     Py_CLEAR(state->JoinedStr_type);
-    Py_CLEAR(state->KaseHandler_type);
     Py_CLEAR(state->LShift_singleton);
     Py_CLEAR(state->LShift_type);
     Py_CLEAR(state->Lambda_type);
@@ -415,6 +415,7 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->bases);
     Py_CLEAR(state->body);
     Py_CLEAR(state->boolop_type);
+    Py_CLEAR(state->casehandler_type);
     Py_CLEAR(state->cause);
     Py_CLEAR(state->cmpop_type);
     Py_CLEAR(state->col_offset);
@@ -443,7 +444,6 @@ void _PyAST_Fini(PyInterpreterState *interp)
     Py_CLEAR(state->is_async);
     Py_CLEAR(state->items);
     Py_CLEAR(state->iter);
-    Py_CLEAR(state->kasehandler_type);
     Py_CLEAR(state->key);
     Py_CLEAR(state->keys);
     Py_CLEAR(state->keyword_type);
@@ -580,7 +580,7 @@ GENERATE_ASDL_SEQ_CONSTRUCTOR(stmt, stmt_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(expr, expr_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(comprehension, comprehension_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(excepthandler, excepthandler_ty)
-GENERATE_ASDL_SEQ_CONSTRUCTOR(kasehandler, kasehandler_ty)
+GENERATE_ASDL_SEQ_CONSTRUCTOR(casehandler, casehandler_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(arguments, arguments_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(arg, arg_ty)
 GENERATE_ASDL_SEQ_CONSTRUCTOR(keyword, keyword_ty)
@@ -868,14 +868,14 @@ static const char * const ExceptHandler_fields[]={
     "name",
     "body",
 };
-static const char * const kasehandler_attributes[] = {
+static const char * const casehandler_attributes[] = {
     "lineno",
     "col_offset",
     "end_lineno",
     "end_col_offset",
 };
-static PyObject* ast2obj_kasehandler(struct ast_state *state, void*);
-static const char * const KaseHandler_fields[]={
+static PyObject* ast2obj_casehandler(struct ast_state *state, void*);
+static const char * const CaseHandler_fields[]={
     "value",
     "body",
 };
@@ -1312,7 +1312,7 @@ init_types(struct ast_state *state)
         "     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
         "     | While(expr test, stmt* body, stmt* orelse)\n"
         "     | If(expr test, stmt* body, stmt* orelse)\n"
-        "     | Switch(expr value, kasehandler* handlers, stmt* orelse)\n"
+        "     | Switch(expr value, casehandler* handlers, stmt* orelse)\n"
         "     | With(withitem* items, stmt* body, string? type_comment)\n"
         "     | AsyncWith(withitem* items, stmt* body, string? type_comment)\n"
         "     | Raise(expr? exc, expr? cause)\n"
@@ -1406,7 +1406,7 @@ init_types(struct ast_state *state)
     if (!state->If_type) return 0;
     state->Switch_type = make_type(state, "Switch", state->stmt_type,
                                    Switch_fields, 3,
-        "Switch(expr value, kasehandler* handlers, stmt* orelse)");
+        "Switch(expr value, casehandler* handlers, stmt* orelse)");
     if (!state->Switch_type) return 0;
     state->With_type = make_type(state, "With", state->stmt_type, With_fields,
                                  3,
@@ -1889,23 +1889,23 @@ init_types(struct ast_state *state)
         return 0;
     if (PyObject_SetAttr(state->ExceptHandler_type, state->name, Py_None) == -1)
         return 0;
-    state->kasehandler_type = make_type(state, "kasehandler", state->AST_type,
+    state->casehandler_type = make_type(state, "casehandler", state->AST_type,
                                         NULL, 0,
-        "kasehandler = KaseHandler(expr value, stmt* body)");
-    if (!state->kasehandler_type) return 0;
-    if (!add_attributes(state, state->kasehandler_type, kasehandler_attributes,
+        "casehandler = CaseHandler(expr value, stmt* body)");
+    if (!state->casehandler_type) return 0;
+    if (!add_attributes(state, state->casehandler_type, casehandler_attributes,
         4)) return 0;
-    if (PyObject_SetAttr(state->kasehandler_type, state->end_lineno, Py_None)
+    if (PyObject_SetAttr(state->casehandler_type, state->end_lineno, Py_None)
         == -1)
         return 0;
-    if (PyObject_SetAttr(state->kasehandler_type, state->end_col_offset,
+    if (PyObject_SetAttr(state->casehandler_type, state->end_col_offset,
         Py_None) == -1)
         return 0;
-    state->KaseHandler_type = make_type(state, "KaseHandler",
-                                        state->kasehandler_type,
-                                        KaseHandler_fields, 2,
-        "KaseHandler(expr value, stmt* body)");
-    if (!state->KaseHandler_type) return 0;
+    state->CaseHandler_type = make_type(state, "CaseHandler",
+                                        state->casehandler_type,
+                                        CaseHandler_fields, 2,
+        "CaseHandler(expr value, stmt* body)");
+    if (!state->CaseHandler_type) return 0;
     state->arguments_type = make_type(state, "arguments", state->AST_type,
                                       arguments_fields, 7,
         "arguments(arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs, expr* kw_defaults, arg? kwarg, expr* defaults)");
@@ -1990,8 +1990,8 @@ static int obj2ast_comprehension(struct ast_state *state, PyObject* obj,
                                  comprehension_ty* out, PyArena* arena);
 static int obj2ast_excepthandler(struct ast_state *state, PyObject* obj,
                                  excepthandler_ty* out, PyArena* arena);
-static int obj2ast_kasehandler(struct ast_state *state, PyObject* obj,
-                               kasehandler_ty* out, PyArena* arena);
+static int obj2ast_casehandler(struct ast_state *state, PyObject* obj,
+                               casehandler_ty* out, PyArena* arena);
 static int obj2ast_arguments(struct ast_state *state, PyObject* obj,
                              arguments_ty* out, PyArena* arena);
 static int obj2ast_arg(struct ast_state *state, PyObject* obj, arg_ty* out,
@@ -2397,7 +2397,7 @@ If(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse, int lineno, int
 }
 
 stmt_ty
-Switch(expr_ty value, asdl_kasehandler_seq * handlers, asdl_stmt_seq * orelse,
+Switch(expr_ty value, asdl_casehandler_seq * handlers, asdl_stmt_seq * orelse,
        int lineno, int col_offset, int end_lineno, int end_col_offset, PyArena
        *arena)
 {
@@ -3380,22 +3380,22 @@ ExceptHandler(expr_ty type, identifier name, asdl_stmt_seq * body, int lineno,
     return p;
 }
 
-kasehandler_ty
-KaseHandler(expr_ty value, asdl_stmt_seq * body, int lineno, int col_offset,
+casehandler_ty
+CaseHandler(expr_ty value, asdl_stmt_seq * body, int lineno, int col_offset,
             int end_lineno, int end_col_offset, PyArena *arena)
 {
-    kasehandler_ty p;
+    casehandler_ty p;
     if (!value) {
         PyErr_SetString(PyExc_ValueError,
-                        "field 'value' is required for KaseHandler");
+                        "field 'value' is required for CaseHandler");
         return NULL;
     }
-    p = (kasehandler_ty)PyArena_Malloc(arena, sizeof(*p));
+    p = (casehandler_ty)PyArena_Malloc(arena, sizeof(*p));
     if (!p)
         return NULL;
-    p->kind = KaseHandler_kind;
-    p->v.KaseHandler.value = value;
-    p->v.KaseHandler.body = body;
+    p->kind = CaseHandler_kind;
+    p->v.CaseHandler.value = value;
+    p->v.CaseHandler.body = body;
     p->lineno = lineno;
     p->col_offset = col_offset;
     p->end_lineno = end_lineno;
@@ -3909,7 +3909,7 @@ ast2obj_stmt(struct ast_state *state, void* _o)
             goto failed;
         Py_DECREF(value);
         value = ast2obj_list(state, (asdl_seq*)o->v.Switch.handlers,
-                             ast2obj_kasehandler);
+                             ast2obj_casehandler);
         if (!value) goto failed;
         if (PyObject_SetAttr(result, state->handlers, value) == -1)
             goto failed;
@@ -4830,25 +4830,25 @@ failed:
 }
 
 PyObject*
-ast2obj_kasehandler(struct ast_state *state, void* _o)
+ast2obj_casehandler(struct ast_state *state, void* _o)
 {
-    kasehandler_ty o = (kasehandler_ty)_o;
+    casehandler_ty o = (casehandler_ty)_o;
     PyObject *result = NULL, *value = NULL;
     PyTypeObject *tp;
     if (!o) {
         Py_RETURN_NONE;
     }
     switch (o->kind) {
-    case KaseHandler_kind:
-        tp = (PyTypeObject *)state->KaseHandler_type;
+    case CaseHandler_kind:
+        tp = (PyTypeObject *)state->CaseHandler_type;
         result = PyType_GenericNew(tp, NULL, NULL);
         if (!result) goto failed;
-        value = ast2obj_expr(state, o->v.KaseHandler.value);
+        value = ast2obj_expr(state, o->v.CaseHandler.value);
         if (!value) goto failed;
         if (PyObject_SetAttr(result, state->value, value) == -1)
             goto failed;
         Py_DECREF(value);
-        value = ast2obj_list(state, (asdl_seq*)o->v.KaseHandler.body,
+        value = ast2obj_list(state, (asdl_seq*)o->v.CaseHandler.body,
                              ast2obj_stmt);
         if (!value) goto failed;
         if (PyObject_SetAttr(result, state->body, value) == -1)
@@ -6571,7 +6571,7 @@ obj2ast_stmt(struct ast_state *state, PyObject* obj, stmt_ty* out, PyArena*
     }
     if (isinstance) {
         expr_ty value;
-        asdl_kasehandler_seq* handlers;
+        asdl_casehandler_seq* handlers;
         asdl_stmt_seq* orelse;
 
         if (_PyObject_LookupAttr(obj, state->value, &tmp) < 0) {
@@ -6603,13 +6603,13 @@ obj2ast_stmt(struct ast_state *state, PyObject* obj, stmt_ty* out, PyArena*
                 goto failed;
             }
             len = PyList_GET_SIZE(tmp);
-            handlers = _Py_asdl_kasehandler_seq_new(len, arena);
+            handlers = _Py_asdl_casehandler_seq_new(len, arena);
             if (handlers == NULL) goto failed;
             for (i = 0; i < len; i++) {
-                kasehandler_ty val;
+                casehandler_ty val;
                 PyObject *tmp2 = PyList_GET_ITEM(tmp, i);
                 Py_INCREF(tmp2);
-                res = obj2ast_kasehandler(state, tmp2, &val, arena);
+                res = obj2ast_casehandler(state, tmp2, &val, arena);
                 Py_DECREF(tmp2);
                 if (res != 0) goto failed;
                 if (len != PyList_GET_SIZE(tmp)) {
@@ -9414,7 +9414,7 @@ obj2ast_excepthandler(struct ast_state *state, PyObject* obj, excepthandler_ty*
 }
 
 int
-obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
+obj2ast_casehandler(struct ast_state *state, PyObject* obj, casehandler_ty*
                     out, PyArena* arena)
 {
     int isinstance;
@@ -9434,7 +9434,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
         return 1;
     }
     if (tmp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "required field \"lineno\" missing from kasehandler");
+        PyErr_SetString(PyExc_TypeError, "required field \"lineno\" missing from casehandler");
         return 1;
     }
     else {
@@ -9447,7 +9447,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
         return 1;
     }
     if (tmp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "required field \"col_offset\" missing from kasehandler");
+        PyErr_SetString(PyExc_TypeError, "required field \"col_offset\" missing from casehandler");
         return 1;
     }
     else {
@@ -9482,7 +9482,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
         if (res != 0) goto failed;
         Py_CLEAR(tmp);
     }
-    tp = state->KaseHandler_type;
+    tp = state->CaseHandler_type;
     isinstance = PyObject_IsInstance(obj, tp);
     if (isinstance == -1) {
         return 1;
@@ -9495,7 +9495,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
             return 1;
         }
         if (tmp == NULL) {
-            PyErr_SetString(PyExc_TypeError, "required field \"value\" missing from KaseHandler");
+            PyErr_SetString(PyExc_TypeError, "required field \"value\" missing from CaseHandler");
             return 1;
         }
         else {
@@ -9508,7 +9508,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
             return 1;
         }
         if (tmp == NULL) {
-            PyErr_SetString(PyExc_TypeError, "required field \"body\" missing from KaseHandler");
+            PyErr_SetString(PyExc_TypeError, "required field \"body\" missing from CaseHandler");
             return 1;
         }
         else {
@@ -9516,7 +9516,7 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
             Py_ssize_t len;
             Py_ssize_t i;
             if (!PyList_Check(tmp)) {
-                PyErr_Format(PyExc_TypeError, "KaseHandler field \"body\" must be a list, not a %.200s", _PyType_Name(Py_TYPE(tmp)));
+                PyErr_Format(PyExc_TypeError, "CaseHandler field \"body\" must be a list, not a %.200s", _PyType_Name(Py_TYPE(tmp)));
                 goto failed;
             }
             len = PyList_GET_SIZE(tmp);
@@ -9530,20 +9530,20 @@ obj2ast_kasehandler(struct ast_state *state, PyObject* obj, kasehandler_ty*
                 Py_DECREF(tmp2);
                 if (res != 0) goto failed;
                 if (len != PyList_GET_SIZE(tmp)) {
-                    PyErr_SetString(PyExc_RuntimeError, "KaseHandler field \"body\" changed size during iteration");
+                    PyErr_SetString(PyExc_RuntimeError, "CaseHandler field \"body\" changed size during iteration");
                     goto failed;
                 }
                 asdl_seq_SET(body, i, val);
             }
             Py_CLEAR(tmp);
         }
-        *out = KaseHandler(value, body, lineno, col_offset, end_lineno,
+        *out = CaseHandler(value, body, lineno, col_offset, end_lineno,
                            end_col_offset, arena);
         if (*out == NULL) goto failed;
         return 0;
     }
 
-    PyErr_Format(PyExc_TypeError, "expected some sort of kasehandler, but got %R", obj);
+    PyErr_Format(PyExc_TypeError, "expected some sort of casehandler, but got %R", obj);
     failed:
     Py_XDECREF(tmp);
     return 1;
@@ -10439,10 +10439,10 @@ astmodule_exec(PyObject *m)
         0) {
         return -1;
     }
-    if (PyModule_AddObjectRef(m, "kasehandler", state->kasehandler_type) < 0) {
+    if (PyModule_AddObjectRef(m, "casehandler", state->casehandler_type) < 0) {
         return -1;
     }
-    if (PyModule_AddObjectRef(m, "KaseHandler", state->KaseHandler_type) < 0) {
+    if (PyModule_AddObjectRef(m, "CaseHandler", state->CaseHandler_type) < 0) {
         return -1;
     }
     if (PyModule_AddObjectRef(m, "arguments", state->arguments_type) < 0) {

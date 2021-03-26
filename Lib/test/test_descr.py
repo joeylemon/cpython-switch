@@ -4792,11 +4792,11 @@ order (MRO) for bases """
                 return object.__init__(self, *args, **kwargs)
         class OverrideBoth(OverrideNew, OverrideInit):
             pass
-        for case in OverrideNew, OverrideInit, OverrideBoth:
-            case(1)
-            case(1, kw=2)
-            self.assertRaises(TypeError, case, 1, 2, 3)
-            self.assertRaises(TypeError, case, 1, 2, foo=3)
+        for testcase in OverrideNew, OverrideInit, OverrideBoth:
+            testcase(1)
+            testcase(1, kw=2)
+            self.assertRaises(TypeError, testcase, 1, 2, 3)
+            self.assertRaises(TypeError, testcase, 1, 2, foo=3)
 
     def test_subclassing_does_not_duplicate_dict_descriptors(self):
         class Base:

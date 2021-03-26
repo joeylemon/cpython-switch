@@ -6296,10 +6296,10 @@ class CapiTest(unittest.TestCase):
         ]
 
         from_timestamp = _testcapi.get_datetime_fromtimestamp
-        for case in cases:
+        for testcase in cases:
             for macro in False, True:
-                with self.subTest(case=case, macro=macro):
-                    dtup, tzinfo, usetz = case
+                with self.subTest(testcase=testcase, macro=macro):
+                    dtup, tzinfo, usetz = testcase
                     dt_orig = datetime(*dtup, tzinfo=tzinfo)
                     ts = int(dt_orig.timestamp())
 

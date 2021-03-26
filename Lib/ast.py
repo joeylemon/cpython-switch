@@ -984,8 +984,8 @@ class _Unparser(NodeVisitor):
                 with self.block():
                     self.traverse(node.orelse)
 
-    def visit_KaseHandler(self, node):
-        self.fill("kase ")
+    def visit_CaseHandler(self, node):
+        self.fill("case ")
         self.traverse(node.value)
         with self.block():
             self.traverse(node.body)

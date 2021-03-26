@@ -402,7 +402,7 @@ class TestSupport(unittest.TestCase):
 
         support.check__all__(self,
                              unittest,
-                             ("unittest.result", "unittest.case",
+                             ("unittest.result", "unittest.testcase",
                               "unittest.suite", "unittest.loader",
                               "unittest.main", "unittest.runner",
                               "unittest.signals", "unittest.async_case"),

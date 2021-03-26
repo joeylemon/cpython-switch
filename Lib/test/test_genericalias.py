@@ -35,7 +35,7 @@ from re import Pattern, Match
 from types import GenericAlias, MappingProxyType, AsyncGeneratorType
 from tempfile import TemporaryDirectory, SpooledTemporaryFile
 from urllib.parse import SplitResult, ParseResult
-from unittest.case import _AssertRaisesContext
+from unittest.testcase import _AssertRaisesContext
 from queue import Queue, SimpleQueue
 from weakref import WeakSet, ReferenceType, ref
 import typing

@@ -125,9 +125,9 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Unreachable nested reuse", 'i',
                 "[(i, j) for i in range(5) for j in range(5) if True or (i:=10)]"),
         ]
-        for case, target, code in cases:
+        for testcase, target, code in cases:
             msg = f"assignment expression cannot rebind comprehension iteration variable '{target}'"
-            with self.subTest(case=case):
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}, {})
 
@@ -136,9 +136,9 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Inner reuse", 'j', "[i for i in range(5) if (j := 0) for j in range(5)]"),
             ("Inner unpacking reuse", 'j', "[i for i in range(5) if (j := 0) for j, k in [(0, 1)]]"),
         ]
-        for case, target, code in cases:
+        for testcase, target, code in cases:
             msg = f"comprehension inner loop cannot rebind assignment expression target '{target}'"
-            with self.subTest(case=case):
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}) # Module scope
                 with self.assertRaisesRegex(SyntaxError, msg):
@@ -159,8 +159,8 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Nested comprehension body", "[i for i in [(j := True) for j in range(5)]]"),
         ]
         msg = "assignment expression cannot be used in a comprehension iterable expression"
-        for case, code in cases:
-            with self.subTest(case=case):
+        for testcase, code in cases:
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}) # Module scope
                 with self.assertRaisesRegex(SyntaxError, msg):
@@ -179,9 +179,9 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Unreachable nested reuse", 'i',
                 "{(i, j) for i in range(5) for j in range(5) if True or (i:=10)}"),
         ]
-        for case, target, code in cases:
+        for testcase, target, code in cases:
             msg = f"assignment expression cannot rebind comprehension iteration variable '{target}'"
-            with self.subTest(case=case):
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}, {})
 
@@ -190,9 +190,9 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Inner reuse", 'j', "{i for i in range(5) if (j := 0) for j in range(5)}"),
             ("Inner unpacking reuse", 'j', "{i for i in range(5) if (j := 0) for j, k in {(0, 1)}}"),
         ]
-        for case, target, code in cases:
+        for testcase, target, code in cases:
             msg = f"comprehension inner loop cannot rebind assignment expression target '{target}'"
-            with self.subTest(case=case):
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}) # Module scope
                 with self.assertRaisesRegex(SyntaxError, msg):
@@ -213,8 +213,8 @@ class NamedExpressionInvalidTest(unittest.TestCase):
             ("Nested comprehension body", "{i for i in {(j := True) for j in range(5)}}"),
         ]
         msg = "assignment expression cannot be used in a comprehension iterable expression"
-        for case, code in cases:
-            with self.subTest(case=case):
+        for testcase, code in cases:
+            with self.subTest(testcase=testcase):
                 with self.assertRaisesRegex(SyntaxError, msg):
                     exec(code, {}) # Module scope
                 with self.assertRaisesRegex(SyntaxError, msg):
@@ -539,8 +539,8 @@ spam()"""
             ("Nested global", f"x = 1; result = {nested_ref}"),
             ("Nested nonlocal", f"result, x = (lambda x=1: ({nested_ref}, x))()"),
         ]
-        for case, code in cases:
-            with self.subTest(case=case):
+        for testcase, code in cases:
+            with self.subTest(testcase=testcase):
                 ns = {}
                 exec(code, ns)
                 self.assertEqual(ns["x"], 2)

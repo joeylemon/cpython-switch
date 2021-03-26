@@ -925,7 +925,7 @@ x = (
                              "bF''",
                              "Bf''",
                              "BF''",]
-        double_quote_cases = [case.replace("'", '"') for case in single_quote_cases]
+        double_quote_cases = [testcase.replace("'", '"') for testcase in single_quote_cases]
         self.assertAllRaise(SyntaxError, 'unexpected EOF while parsing',
                             single_quote_cases + double_quote_cases)
 

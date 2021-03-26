@@ -802,7 +802,7 @@ class Test_TestCase(unittest.TestCase, TestEquality, TestHashing):
         diff = '\n'.join(difflib.ndiff(pprint.pformat(seq1).splitlines(),
                                        pprint.pformat(seq2).splitlines()))
         # the +1 is the leading \n added by assertSequenceEqual
-        omitted = unittest.case.DIFF_OMITTED % (len(diff) + 1,)
+        omitted = unittest.testcase.DIFF_OMITTED % (len(diff) + 1,)
 
         self.maxDiff = len(diff)//2
         try:
@@ -838,7 +838,7 @@ class Test_TestCase(unittest.TestCase, TestEquality, TestHashing):
     def testTruncateMessage(self):
         self.maxDiff = 1
         message = self._truncateMessage('foo', 'bar')
-        omitted = unittest.case.DIFF_OMITTED % len('bar')
+        omitted = unittest.testcase.DIFF_OMITTED % len('bar')
         self.assertEqual(message, 'foo' + omitted)
 
         self.maxDiff = None
@@ -1917,10 +1917,10 @@ test case
 
     @support.cpython_only
     def testNoCycles(self):
-        case = unittest.TestCase()
-        wr = weakref.ref(case)
+        testcase = unittest.TestCase()
+        wr = weakref.ref(testcase)
         with support.disable_gc():
-            del case
+            del testcase
             self.assertFalse(wr())
 
     def test_no_exception_leak(self):

@@ -15,8 +15,8 @@ class TestSetups(unittest.TestCase):
                                           stream=io.StringIO())
     def runTests(self, *cases):
         suite = unittest.TestSuite()
-        for case in cases:
-            tests = unittest.defaultTestLoader.loadTestsFromTestCase(case)
+        for testcase in cases:
+            tests = unittest.defaultTestLoader.loadTestsFromTestCase(testcase)
             suite.addTests(tests)
 
         runner = self.getRunner()

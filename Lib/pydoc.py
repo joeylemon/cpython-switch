@@ -1850,7 +1850,7 @@ class Helper:
         'with': ('with', 'CONTEXTMANAGERS EXCEPTIONS yield'),
         'yield': ('yield', ''),
         'switch': '',
-        'kase': '',
+        'case': '',
     }
     # Either add symbols to this dictionary or to the symbols dictionary
     # directly: Whichever is easier. They are merged later.

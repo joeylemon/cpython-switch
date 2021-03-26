@@ -5,7 +5,7 @@ import pickle
 import subprocess
 
 import unittest
-from unittest.case import _Outcome
+from unittest.testcase import _Outcome
 
 from unittest.test.support import (LoggingResult,
                                    ResultWithNoStartTestRunStopTestRun)
@@ -22,8 +22,8 @@ def getRunner():
 
 def runTests(*cases):
     suite = unittest.TestSuite()
-    for case in cases:
-        tests = unittest.defaultTestLoader.loadTestsFromTestCase(case)
+    for testcase in cases:
+        tests = unittest.defaultTestLoader.loadTestsFromTestCase(testcase)
         suite.addTests(tests)
 
     runner = getRunner()
@@ -371,15 +371,15 @@ class TestModuleCleanUp(unittest.TestCase):
                                       four='hello', five='goodbye')
             unittest.addModuleCleanup(module_cleanup2)
 
-        self.assertEqual(unittest.case._module_cleanups,
+        self.assertEqual(unittest.testcase._module_cleanups,
                          [(module_cleanup1, (1, 2, 3),
                            dict(four='hello', five='goodbye')),
                           (module_cleanup2, (), {})])
 
-        unittest.case.doModuleCleanups()
+        unittest.testcase.doModuleCleanups()
         self.assertEqual(module_cleanups, [(4, (), {}), (3, (1, 2, 3),
                                           dict(four='hello', five='goodbye'))])
-        self.assertEqual(unittest.case._module_cleanups, [])
+        self.assertEqual(unittest.testcase._module_cleanups, [])
 
     def test_doModuleCleanup_with_errors_in_addModuleCleanup(self):
         module_cleanups = []
@@ -394,14 +394,14 @@ class TestModuleCleanUp(unittest.TestCase):
             unittest.addModuleCleanup(module_cleanup_good, 1, 2, 3,
                                       four='hello', five='goodbye')
             unittest.addModuleCleanup(module_cleanup_bad)
-        self.assertEqual(unittest.case._module_cleanups,
+        self.assertEqual(unittest.testcase._module_cleanups,
                          [(module_cleanup_good, (1, 2, 3),
                            dict(four='hello', five='goodbye')),
                           (module_cleanup_bad, (), {})])
         with self.assertRaises(Exception) as e:
-            unittest.case.doModuleCleanups()
+            unittest.testcase.doModuleCleanups()
         self.assertEqual(str(e.exception), 'CleanUpExc')
-        self.assertEqual(unittest.case._module_cleanups, [])
+        self.assertEqual(unittest.testcase._module_cleanups, [])
 
     def test_addModuleCleanup_arg_errors(self):
         cleanups = []
@@ -414,7 +414,7 @@ class TestModuleCleanUp(unittest.TestCase):
                 unittest.addModuleCleanup(function=cleanup, arg='hello')
             with self.assertRaises(TypeError):
                 unittest.addModuleCleanup()
-        unittest.case.doModuleCleanups()
+        unittest.testcase.doModuleCleanups()
         self.assertEqual(cleanups,
                          [((1, 2), {'function': 'hello'})])
 
@@ -455,7 +455,7 @@ class TestModuleCleanUp(unittest.TestCase):
         self.assertEqual(ordering,
                          ['setUpModule', 'setUpClass', 'test', 'tearDownClass',
                           'tearDownModule', 'cleanup_good'])
-        self.assertEqual(unittest.case._module_cleanups, [])
+        self.assertEqual(unittest.testcase._module_cleanups, [])
 
     def test_run_multiple_module_cleanUp(self):
         blowUp = True
@@ -530,7 +530,7 @@ class TestModuleCleanUp(unittest.TestCase):
                           'tearDownModule', 'cleanup_good', 'setUpModule2',
                           'setUpClass2', 'test2', 'tearDownClass2',
                           'tearDownModule2', 'cleanup_good'])
-        self.assertEqual(unittest.case._module_cleanups, [])
+        self.assertEqual(unittest.testcase._module_cleanups, [])
 
     def test_debug_module_executes_cleanUp(self):
         ordering = []
@@ -560,7 +560,7 @@ class TestModuleCleanUp(unittest.TestCase):
         self.assertEqual(ordering,
                          ['setUpModule', 'setUpClass', 'test', 'tearDownClass',
                           'tearDownModule', 'cleanup_good'])
-        self.assertEqual(unittest.case._module_cleanups, [])
+        self.assertEqual(unittest.testcase._module_cleanups, [])
 
     def test_addClassCleanup_arg_errors(self):
         cleanups = []

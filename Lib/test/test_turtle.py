@@ -178,7 +178,7 @@ class TestVec2D(VectorComparisonMixin, unittest.TestCase):
 
     def _assert_arithmetic_cases(self, test_cases, lambda_operator):
         for test_case in test_cases:
-            with self.subTest(case=test_case):
+            with self.subTest(testcase=test_case):
 
                 ((first, second), expected) = test_case
 
@@ -257,9 +257,9 @@ class TestVec2D(VectorComparisonMixin, unittest.TestCase):
             (((1, 0), 360), (1, 0)),
         ]
 
-        for case in cases:
-            with self.subTest(case=case):
-                (vec, rot), expected = case
+        for testcase in cases:
+            with self.subTest(testcase=testcase):
+                (vec, rot), expected = testcase
                 vec = Vec2D(*vec)
                 got = vec.rotate(rot)
                 self.assertVectorsAlmostEqual(got, expected)

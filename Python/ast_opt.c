@@ -408,7 +408,7 @@ static int astfold_comprehension(comprehension_ty node_, PyArena *ctx_, _PyASTOp
 static int astfold_keyword(keyword_ty node_, PyArena *ctx_, _PyASTOptimizeState *state);
 static int astfold_withitem(withitem_ty node_, PyArena *ctx_, _PyASTOptimizeState *state);
 static int astfold_excepthandler(excepthandler_ty node_, PyArena *ctx_, _PyASTOptimizeState *state);
-static int astfold_kasehandler(kasehandler_ty node_, PyArena *ctx_, _PyASTOptimizeState *state);
+static int astfold_casehandler(casehandler_ty node_, PyArena *ctx_, _PyASTOptimizeState *state);
 #define CALL(FUNC, TYPE, ARG) \
     if (!FUNC((ARG), ctx_, state)) \
         return 0;
@@ -705,7 +705,7 @@ astfold_stmt(stmt_ty node_, PyArena *ctx_, _PyASTOptimizeState *state)
         break;
     case Switch_kind:
         CALL_OPT(astfold_expr, expr_ty, node_->v.Switch.value);
-        CALL_SEQ(astfold_kasehandler, kasehandler, node_->v.Switch.handlers);
+        CALL_SEQ(astfold_casehandler, casehandler, node_->v.Switch.handlers);
         CALL_SEQ(astfold_stmt, stmt, node_->v.Switch.orelse);
         break;
     case Assert_kind:
@@ -745,12 +745,12 @@ astfold_excepthandler(excepthandler_ty node_, PyArena *ctx_, _PyASTOptimizeState
 }
 
 static int
-astfold_kasehandler(kasehandler_ty node_, PyArena *ctx_, _PyASTOptimizeState *state)
+astfold_casehandler(casehandler_ty node_, PyArena *ctx_, _PyASTOptimizeState *state)
 {
     switch (node_->kind) {
-    case KaseHandler_kind:
-        CALL_OPT(astfold_expr, expr_ty, node_->v.KaseHandler.value);
-        CALL_SEQ(astfold_stmt, stmt, node_->v.KaseHandler.body);
+    case CaseHandler_kind:
+        CALL_OPT(astfold_expr, expr_ty, node_->v.CaseHandler.value);
+        CALL_SEQ(astfold_stmt, stmt, node_->v.CaseHandler.body);
         break;
     // No default case, so the compiler will emit a warning if new handler
     // kinds are added without being handled here

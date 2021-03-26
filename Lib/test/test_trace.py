@@ -372,7 +372,7 @@ class TestCoverage(unittest.TestCase):
         self.assertIn("case.py", stdout)   # from unittest
         files = os.listdir(TESTFN)
         self.assertIn("pprint.cover", files)
-        self.assertIn("unittest.case.cover", files)
+        self.assertIn("unittest.testcase.cover", files)
 
     def test_coverage_ignore(self):
         # Ignore all files, nothing should be traced nor printed

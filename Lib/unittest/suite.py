@@ -2,7 +2,7 @@
 
 import sys
 
-from . import case
+from . import testcase
 from . import util
 
 __unittest = True
@@ -46,7 +46,7 @@ class BaseTestSuite(object):
         if not callable(test):
             raise TypeError("{} is not callable".format(repr(test)))
         if isinstance(test, type) and issubclass(test,
-                                                 (case.TestCase, TestSuite)):
+                                                 (testcase.TestCase, TestSuite)):
             raise TypeError("TestCases and TestSuites must be instantiated "
                             "before passing them to addTest()")
         self._tests.append(test)
@@ -208,7 +208,7 @@ class TestSuite(BaseTestSuite):
                 setUpModule()
             except Exception as e:
                 try:
-                    case.doModuleCleanups()
+                    testcase.doModuleCleanups()
                 except Exception as exc:
                     self._createClassOrModuleLevelException(result, exc,
                                                             'setUpModule',
@@ -231,7 +231,7 @@ class TestSuite(BaseTestSuite):
                                         info=None):
         error = _ErrorHolder(errorName)
         addSkip = getattr(result, 'addSkip', None)
-        if addSkip is not None and isinstance(exception, case.SkipTest):
+        if addSkip is not None and isinstance(exception, testcase.SkipTest):
             addSkip(error, str(exception))
         else:
             if not info:
@@ -265,7 +265,7 @@ class TestSuite(BaseTestSuite):
             finally:
                 _call_if_exists(result, '_restoreStdout')
                 try:
-                    case.doModuleCleanups()
+                    testcase.doModuleCleanups()
                 except Exception as e:
                     self._createClassOrModuleLevelException(result, e,
                                                             'tearDownModule',

@@ -33,7 +33,7 @@ static KeywordToken *reserved_keywords[] = {
         {"from", 515},
         {"elif", 516},
         {"else", 517},
-        {"kase", 518},
+        {"case", 518},
         {"with", 521},
         {"True", 530},
         {"None", 532},
@@ -100,7 +100,7 @@ static KeywordToken *reserved_keywords[] = {
 #define elif_stmt_type 1029
 #define else_block_type 1030
 #define switch_stmt_type 1031
-#define kase_block_type 1032
+#define case_block_type 1032
 #define while_stmt_type 1033
 #define for_stmt_type 1034
 #define with_stmt_type 1035
@@ -437,7 +437,7 @@ static stmt_ty if_stmt_rule(Parser *p);
 static stmt_ty elif_stmt_rule(Parser *p);
 static asdl_stmt_seq* else_block_rule(Parser *p);
 static stmt_ty switch_stmt_rule(Parser *p);
-static kasehandler_ty kase_block_rule(Parser *p);
+static casehandler_ty case_block_rule(Parser *p);
 static stmt_ty while_stmt_rule(Parser *p);
 static stmt_ty for_stmt_rule(Parser *p);
 static stmt_ty with_stmt_rule(Parser *p);
@@ -3881,7 +3881,7 @@ else_block_rule(Parser *p)
 }
 
 // switch_stmt:
-//     | 'switch' named_expression &&':' NEWLINE INDENT kase_block+ else_block? DEDENT
+//     | 'switch' named_expression &&':' NEWLINE INDENT case_block+ else_block? DEDENT
 static stmt_ty
 switch_stmt_rule(Parser *p)
 {
@@ -3901,16 +3901,16 @@ switch_stmt_rule(Parser *p)
     UNUSED(_start_lineno); // Only used by EXTRA macro
     int _start_col_offset = p->tokens[_mark]->col_offset;
     UNUSED(_start_col_offset); // Only used by EXTRA macro
-    { // 'switch' named_expression &&':' NEWLINE INDENT kase_block+ else_block? DEDENT
+    { // 'switch' named_expression &&':' NEWLINE INDENT case_block+ else_block? DEDENT
         if (p->error_indicator) {
             D(p->level--);
             return NULL;
         }
-        D(fprintf(stderr, "%*c> switch_stmt[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT kase_block+ else_block? DEDENT"));
+        D(fprintf(stderr, "%*c> switch_stmt[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT case_block+ else_block? DEDENT"));
         Token * _keyword;
         Token * _literal;
         expr_ty a;
-        asdl_kasehandler_seq* b;
+        asdl_casehandler_seq* b;
         void *c;
         Token * dedent_var;
         Token * indent_var;
@@ -3926,14 +3926,14 @@ switch_stmt_rule(Parser *p)
             &&
             (indent_var = _PyPegen_expect_token(p, INDENT))  // token='INDENT'
             &&
-            (b = (asdl_kasehandler_seq*)_loop1_39_rule(p))  // kase_block+
+            (b = (asdl_casehandler_seq*)_loop1_39_rule(p))  // case_block+
             &&
             (c = else_block_rule(p), 1)  // else_block?
             &&
             (dedent_var = _PyPegen_expect_token(p, DEDENT))  // token='DEDENT'
         )
         {
-            D(fprintf(stderr, "%*c+ switch_stmt[%d-%d]: %s succeeded!\n", p->level, ' ', _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT kase_block+ else_block? DEDENT"));
+            D(fprintf(stderr, "%*c+ switch_stmt[%d-%d]: %s succeeded!\n", p->level, ' ', _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT case_block+ else_block? DEDENT"));
             Token *_token = _PyPegen_get_last_nonnwhitespace_token(p);
             if (_token == NULL) {
                 D(p->level--);
@@ -3953,7 +3953,7 @@ switch_stmt_rule(Parser *p)
         }
         p->mark = _mark;
         D(fprintf(stderr, "%*c%s switch_stmt[%d-%d]: %s failed!\n", p->level, ' ',
-                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT kase_block+ else_block? DEDENT"));
+                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "'switch' named_expression &&':' NEWLINE INDENT case_block+ else_block? DEDENT"));
     }
     _res = NULL;
   done:
@@ -3961,16 +3961,16 @@ switch_stmt_rule(Parser *p)
     return _res;
 }
 
-// kase_block: 'kase' named_expression &&':' block
-static kasehandler_ty
-kase_block_rule(Parser *p)
+// case_block: 'case' named_expression &&':' block
+static casehandler_ty
+case_block_rule(Parser *p)
 {
     D(p->level++);
     if (p->error_indicator) {
         D(p->level--);
         return NULL;
     }
-    kasehandler_ty _res = NULL;
+    casehandler_ty _res = NULL;
     int _mark = p->mark;
     if (p->mark == p->fill && _PyPegen_fill_token(p) < 0) {
         p->error_indicator = 1;
@@ -3981,18 +3981,18 @@ kase_block_rule(Parser *p)
     UNUSED(_start_lineno); // Only used by EXTRA macro
     int _start_col_offset = p->tokens[_mark]->col_offset;
     UNUSED(_start_col_offset); // Only used by EXTRA macro
-    { // 'kase' named_expression &&':' block
+    { // 'case' named_expression &&':' block
         if (p->error_indicator) {
             D(p->level--);
             return NULL;
         }
-        D(fprintf(stderr, "%*c> kase_block[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "'kase' named_expression &&':' block"));
+        D(fprintf(stderr, "%*c> case_block[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "'case' named_expression &&':' block"));
         Token * _keyword;
         Token * _literal;
         expr_ty a;
         asdl_stmt_seq* b;
         if (
-            (_keyword = _PyPegen_expect_token(p, 518))  // token='kase'
+            (_keyword = _PyPegen_expect_token(p, 518))  // token='case'
             &&
             (a = named_expression_rule(p))  // named_expression
             &&
@@ -4001,7 +4001,7 @@ kase_block_rule(Parser *p)
             (b = block_rule(p))  // block
         )
         {
-            D(fprintf(stderr, "%*c+ kase_block[%d-%d]: %s succeeded!\n", p->level, ' ', _mark, p->mark, "'kase' named_expression &&':' block"));
+            D(fprintf(stderr, "%*c+ case_block[%d-%d]: %s succeeded!\n", p->level, ' ', _mark, p->mark, "'case' named_expression &&':' block"));
             Token *_token = _PyPegen_get_last_nonnwhitespace_token(p);
             if (_token == NULL) {
                 D(p->level--);
@@ -4011,7 +4011,7 @@ kase_block_rule(Parser *p)
             UNUSED(_end_lineno); // Only used by EXTRA macro
             int _end_col_offset = _token->end_col_offset;
             UNUSED(_end_col_offset); // Only used by EXTRA macro
-            _res = _Py_KaseHandler ( a , b , EXTRA );
+            _res = _Py_CaseHandler ( a , b , EXTRA );
             if (_res == NULL && PyErr_Occurred()) {
                 p->error_indicator = 1;
                 D(p->level--);
@@ -4020,8 +4020,8 @@ kase_block_rule(Parser *p)
             goto done;
         }
         p->mark = _mark;
-        D(fprintf(stderr, "%*c%s kase_block[%d-%d]: %s failed!\n", p->level, ' ',
-                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "'kase' named_expression &&':' block"));
+        D(fprintf(stderr, "%*c%s case_block[%d-%d]: %s failed!\n", p->level, ' ',
+                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "'case' named_expression &&':' block"));
     }
     _res = NULL;
   done:
@@ -18517,7 +18517,7 @@ _tmp_38_rule(Parser *p)
     return _res;
 }
 
-// _loop1_39: kase_block
+// _loop1_39: case_block
 static asdl_seq *
 _loop1_39_rule(Parser *p)
 {
@@ -18538,18 +18538,18 @@ _loop1_39_rule(Parser *p)
     }
     ssize_t _children_capacity = 1;
     ssize_t _n = 0;
-    { // kase_block
+    { // case_block
         if (p->error_indicator) {
             D(p->level--);
             return NULL;
         }
-        D(fprintf(stderr, "%*c> _loop1_39[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "kase_block"));
-        kasehandler_ty kase_block_var;
+        D(fprintf(stderr, "%*c> _loop1_39[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "case_block"));
+        casehandler_ty case_block_var;
         while (
-            (kase_block_var = kase_block_rule(p))  // kase_block
+            (case_block_var = case_block_rule(p))  // case_block
         )
         {
-            _res = kase_block_var;
+            _res = case_block_var;
             if (_n == _children_capacity) {
                 _children_capacity *= 2;
                 void **_new_children = PyMem_Realloc(_children, _children_capacity*sizeof(void *));
@@ -18566,7 +18566,7 @@ _loop1_39_rule(Parser *p)
         }
         p->mark = _mark;
         D(fprintf(stderr, "%*c%s _loop1_39[%d-%d]: %s failed!\n", p->level, ' ',
-                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "kase_block"));
+                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "case_block"));
     }
     if (_n == 0 || p->error_indicator) {
         PyMem_Free(_children);

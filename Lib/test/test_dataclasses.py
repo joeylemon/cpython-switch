@@ -2362,8 +2362,8 @@ class TestHash(unittest.TestCase):
                 return (3,)
             return 0
 
-        def test(case, unsafe_hash, eq, frozen, with_hash, result):
-            with self.subTest(case=case, unsafe_hash=unsafe_hash, eq=eq,
+        def test(testcase, unsafe_hash, eq, frozen, with_hash, result):
+            with self.subTest(testcase=testcase, unsafe_hash=unsafe_hash, eq=eq,
                               frozen=frozen):
                 if result != 'exception':
                     if with_hash:
@@ -2411,7 +2411,7 @@ class TestHash(unittest.TestCase):
         #  frozen=True/False
         # And for each of these, a different result if
         #  __hash__ is defined or not.
-        for case, (unsafe_hash,  eq,    frozen, res_no_defined_hash, res_defined_hash) in enumerate([
+        for testcase, (unsafe_hash,  eq,    frozen, res_no_defined_hash, res_defined_hash) in enumerate([
                   (False,        False, False,  '',                  ''),
                   (False,        False, True,   '',                  ''),
                   (False,        True,  False,  'none',              ''),
@@ -2421,14 +2421,14 @@ class TestHash(unittest.TestCase):
                   (True,         True,  False,  'fn',                'exception'),
                   (True,         True,  True,   'fn',                'exception'),
                   ], 1):
-            test(case, unsafe_hash, eq, frozen, False, res_no_defined_hash)
-            test(case, unsafe_hash, eq, frozen, True,  res_defined_hash)
+            test(testcase, unsafe_hash, eq, frozen, False, res_no_defined_hash)
+            test(testcase, unsafe_hash, eq, frozen, True,  res_defined_hash)
 
             # Test non-bool truth values, too.  This is just to
             #  make sure the data-driven table in the decorator
             #  handles non-bool values.
-            test(case, non_bool(unsafe_hash), non_bool(eq), non_bool(frozen), False, res_no_defined_hash)
-            test(case, non_bool(unsafe_hash), non_bool(eq), non_bool(frozen), True,  res_defined_hash)
+            test(testcase, non_bool(unsafe_hash), non_bool(eq), non_bool(frozen), False, res_no_defined_hash)
+            test(testcase, non_bool(unsafe_hash), non_bool(eq), non_bool(frozen), True,  res_defined_hash)
 
 
     def test_eq_only(self):

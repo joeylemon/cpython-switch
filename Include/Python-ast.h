@@ -34,7 +34,7 @@ typedef struct _comprehension *comprehension_ty;
 
 typedef struct _excepthandler *excepthandler_ty;
 
-typedef struct _kasehandler *kasehandler_ty;
+typedef struct _casehandler *casehandler_ty;
 
 typedef struct _arguments *arguments_ty;
 
@@ -88,10 +88,10 @@ asdl_excepthandler_seq *_Py_asdl_excepthandler_seq_new(Py_ssize_t size, PyArena
 
 typedef struct {
     _ASDL_SEQ_HEAD
-    kasehandler_ty typed_elements[1];
-} asdl_kasehandler_seq;
+    casehandler_ty typed_elements[1];
+} asdl_casehandler_seq;
 
-asdl_kasehandler_seq *_Py_asdl_kasehandler_seq_new(Py_ssize_t size, PyArena
+asdl_casehandler_seq *_Py_asdl_casehandler_seq_new(Py_ssize_t size, PyArena
                                                    *arena);
 
 typedef struct {
@@ -258,7 +258,7 @@ struct _stmt {
 
         struct {
             expr_ty value;
-            asdl_kasehandler_seq *handlers;
+            asdl_casehandler_seq *handlers;
             asdl_stmt_seq *orelse;
         } Switch;
 
@@ -501,14 +501,14 @@ struct _excepthandler {
     int end_col_offset;
 };
 
-enum _kasehandler_kind {KaseHandler_kind=1};
-struct _kasehandler {
-    enum _kasehandler_kind kind;
+enum _casehandler_kind {CaseHandler_kind=1};
+struct _casehandler {
+    enum _casehandler_kind kind;
     union {
         struct {
             expr_ty value;
             asdl_stmt_seq *body;
-        } KaseHandler;
+        } CaseHandler;
 
     } v;
     int lineno;
@@ -632,7 +632,7 @@ stmt_ty _Py_If(expr_ty test, asdl_stmt_seq * body, asdl_stmt_seq * orelse, int
                lineno, int col_offset, int end_lineno, int end_col_offset,
                PyArena *arena);
 #define Switch(a0, a1, a2, a3, a4, a5, a6, a7) _Py_Switch(a0, a1, a2, a3, a4, a5, a6, a7)
-stmt_ty _Py_Switch(expr_ty value, asdl_kasehandler_seq * handlers,
+stmt_ty _Py_Switch(expr_ty value, asdl_casehandler_seq * handlers,
                    asdl_stmt_seq * orelse, int lineno, int col_offset, int
                    end_lineno, int end_col_offset, PyArena *arena);
 #define With(a0, a1, a2, a3, a4, a5, a6, a7) _Py_With(a0, a1, a2, a3, a4, a5, a6, a7)
@@ -787,8 +787,8 @@ excepthandler_ty _Py_ExceptHandler(expr_ty type, identifier name, asdl_stmt_seq
                                    * body, int lineno, int col_offset, int
                                    end_lineno, int end_col_offset, PyArena
                                    *arena);
-#define KaseHandler(a0, a1, a2, a3, a4, a5, a6) _Py_KaseHandler(a0, a1, a2, a3, a4, a5, a6)
-kasehandler_ty _Py_KaseHandler(expr_ty value, asdl_stmt_seq * body, int lineno,
+#define CaseHandler(a0, a1, a2, a3, a4, a5, a6) _Py_CaseHandler(a0, a1, a2, a3, a4, a5, a6)
+casehandler_ty _Py_CaseHandler(expr_ty value, asdl_stmt_seq * body, int lineno,
                                int col_offset, int end_lineno, int
                                end_col_offset, PyArena *arena);
 #define arguments(a0, a1, a2, a3, a4, a5, a6, a7) _Py_arguments(a0, a1, a2, a3, a4, a5, a6, a7)

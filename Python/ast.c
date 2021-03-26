@@ -399,14 +399,14 @@ validate_stmt(stmt_ty stmt)
         if (!validate_expr(stmt->v.Switch.value, Load))
             return 0;
         if (!asdl_seq_LEN(stmt->v.Switch.handlers)) {
-            PyErr_SetString(PyExc_ValueError, "Switch has no kases");
+            PyErr_SetString(PyExc_ValueError, "Switch has no cases");
             return 0;
         }
         for (i = 0; i < asdl_seq_LEN(stmt->v.Switch.handlers); i++) {
-            kasehandler_ty handler = asdl_seq_GET(stmt->v.Switch.handlers, i);
-            if ((handler->v.KaseHandler.value &&
-                 !validate_expr(handler->v.KaseHandler.value, Load)) ||
-                !validate_body(handler->v.KaseHandler.body, "KaseHandler"))
+            casehandler_ty handler = asdl_seq_GET(stmt->v.Switch.handlers, i);
+            if ((handler->v.CaseHandler.value &&
+                 !validate_expr(handler->v.CaseHandler.value, Load)) ||
+                !validate_body(handler->v.CaseHandler.body, "CaseHandler"))
                 return 0;
         }
         return (!asdl_seq_LEN(stmt->v.Switch.orelse) ||

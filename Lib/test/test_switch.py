@@ -1,7 +1,30 @@
 import unittest
+import ast
 import random
 
-class SwitchTests(unittest.TestCase):
+class SyntaxTests(unittest.TestCase):
+    def test_missing_switch_value(self):
+        try:
+            ast.parse("switch:\n\tcase 1:\n\t\tpass")
+        except SyntaxError:
+            return
+        self.fail("missing switch value did not throw syntax error")
+
+    def test_missing_cases(self):
+        try:
+            ast.parse("switch 1:\n\telse:\n\t\tpass")
+        except SyntaxError:
+            return
+        self.fail("missing cases did not throw syntax error")
+
+    def test_invalid_indentation(self):
+        try:
+            ast.parse("switch 1:\ncase 1:\n\tpass")
+        except SyntaxError:
+            return
+        self.fail("bad indentation did not throw syntax error")
+
+class MatchingTests(unittest.TestCase):
     def test_static_case_matching(self):
         switch 1:
             case 0:

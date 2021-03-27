@@ -23,11 +23,11 @@ switch val:
 
 ## Table of Contents
 
-- [Project Description](blob/main/README.md#project-description)
-- [Designing the Changes](blob/main/README.md#designing-the-changes)
-- [Modifying the Grammar](blob/main/README.md#modifying-the-grammar)
-- [Modifying the Tests](blob/main/README.md#modifying-the-tests)
-- [Conclusion](blob/main/README.md#conclusion)
+- [Project Description](#project-description)
+- [Designing the Changes](#designing-the-changes)
+- [Modifying the Grammar](#modifying-the-grammar)
+- [Modifying the Tests](#modifying-the-tests)
+- [Conclusion](#conclusion)
 
 <a id="project-description"></a>
 ## Project Description

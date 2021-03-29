@@ -5,7 +5,7 @@
 This is an implementation of a new switch statement in the [CPython](https://github.com/python/cpython) interpreter at Python version 3.10.0. Below is 
 an example of the new syntax:
 
-```py
+```python
 switch 0:
     case 0:
         print("it's zero")
@@ -14,7 +14,7 @@ switch 0:
     else:
         print("it's something")
         
-// prints "it's zero"
+# prints "it's zero"
 ```
 
 ### Contributors

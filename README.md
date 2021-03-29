@@ -2,20 +2,22 @@
 
 ![CI](https://github.com/UTK-CS594-Spring-2021/Team-Rabin/workflows/CI/badge.svg)
 
-This is Team Rabin's implementation of a new switch statement in the [CPython](https://github.com/python/cpython) interpreter at Python version 3.10.0. Below is 
+This is an implementation of a new switch statement in the [CPython](https://github.com/python/cpython) interpreter at Python version 3.10.0. Below is 
 an example of the new syntax:
 
 ```py
-switch val:
+switch 0:
     case 0:
         print("it's zero")
     case 1:
         print("it's one")
     else:
         print("it's something")
+        
+// prints "it's zero"
 ```
 
-### Team Members
+### Contributors
 
 - Isaac Sikkema ([@isikkema](https://github.com/isikkema))
 - Joey Lemon ([@joeylemon](https://github.com/joeylemon))
@@ -36,21 +38,21 @@ As students in COSC594: Software Development Tools at the [University of Tenness
 CPython interpreter, from the tokenizer all the way to the compiler. From the project assignment:
 
 > The group project will entail students implementing a complex feature in a large, open source
-development tool over the entire semester. Students will be given the freedom, and expectation, to
-understand the feature request, convert the feature request into requirements and design
-documents, and make the necessary code changes to implement the feature. Students must do
-this without being given explicit instructions on how to do so.
-
+> development tool over the entire semester. Students will be given the freedom, and expectation, to
+> understand the feature request, convert the feature request into requirements and design
+> documents, and make the necessary code changes to implement the feature. Students must do
+> this without being given explicit instructions on how to do so.
+> 
 > The feature request will be provided to students as if it were written by a customer/user of the
-software project or a product manager, and may require students to elicit more details from
-myself. Students have the freedom to design the feature as they see fit in an effort to try to satisfy
-the feature request. There will be many open-ended design decisions that will need to be made.
+> software project or a product manager, and may require students to elicit more details from
+> myself. Students have the freedom to design the feature as they see fit in an effort to try to satisfy
+> the feature request. There will be many open-ended design decisions that will need to be made.
 
 <a id="designing-the-changes"></a>
 ## Designing the Changes
 
 We initially went through preliminary design iterations to decide the easiest implementation of the feature request. We figured an easy implementation 
-was one that resulted in the least collisions with existing syntax:
+was one that resulted in the least collisions with existing syntax or common variable names:
 ```py
 sswitch 0:
     pass
@@ -59,7 +61,7 @@ scase 0:
 sdefault:
     pass
 ```
-Wanting to avoid the prepended 's' characters but also avoid colliding with many instances of `case` keywords throughout CPython, we considered the syntax:
+Wanting to avoid the prepended 's' characters and still avoid colliding with many instances of `case` keywords throughout CPython, we considered the syntax:
 ```py
 switch 0:
     circumstance 0:
@@ -83,7 +85,7 @@ switch 0:
     else:
         pass
 ```
-Eventually, we would change to a more sane `case` keyword and rename all existing instances of the keyword in the repository.
+Eventually, we would change to a more sane `case` keyword and tough it out to rename all existing instances of the keyword in the repository.
 
 <a id="modifying-the-grammar"></a>
 ## Modifying the Grammar
@@ -92,7 +94,7 @@ The first step to adding our new switch statement to CPython was creating defini
 Python provides an excellent developer guide, and we used the checklist from [24. Changing CPython’s Grammar](https://devguide.python.org/grammar/) to
 complete this step. 
 
-The main change at this stage was adding the definitions to `Grammar/python.gram`:
+The main change at this stage was adding the definitions to [Grammar/python.gram](Grammar/python.gram):
 ```
 switch_stmt[stmt_ty]:
     | 'switch' a=named_expression &&':' NEWLINE INDENT b[asdl_kasehandler_seq*]=kase_block+ c=[else_block] DEDENT { _Py_Switch(a, b, c, EXTRA) }
@@ -100,7 +102,7 @@ kase_block[kasehandler_ty]:
     | 'kase' a=named_expression &&':' b=block { _Py_KaseHandler(a, b, EXTRA) }
 ```
 
-as well as `Parser/Python.asdl`:
+as well as [Parser/Python.asdl](Parser/Python.asdl):
 ```
 | Switch(expr value, kasehandler* handlers, stmt* orelse)
 
@@ -109,12 +111,12 @@ kasehandler = KaseHandler(expr value, stmt* body)
 ```
 
 After running `make regen-all`, these changes would automatically be propagated throughout the interpreter in files such as 
-`Parser/parser.c`, `Python/Python-ast.c`, and `Include/Python-ast.h`
+[Parser/parser.c](Parser/parser.c), [Python/Python-ast.c](Python/Python-ast.c), and [Include/Python-ast.h](Include/Python-ast.h).
 
 ## Modifying the Compiler
 
 At this stage, Python would recognize our switch statement but not execute it. We still needed to generate and validate the appropriate AST nodes for the new 
-grammar. To do so, we modified `Python/ast.c`:
+grammar. To do so, we modified [Python/ast.c](Python/ast.c):
 ```c
 case Switch_kind:
     if (!validate_expr(stmt->v.Switch.value, Load))
@@ -134,8 +136,8 @@ case Switch_kind:
             validate_stmts(stmt->v.Switch.orelse));
 ```
 
-Our AST nodes were now being validated properly. Next, we needed to modify `Python/compile.c` to generate new bytecode for our switch statement. This included 
-adding a new function called [compile_switch()](https://github.com/UTK-CS594-Spring-2021/Team-Rabin/blob/main/Python/compile.c#L2797). It is a rather large function
+Our AST nodes were now being validated properly. Next, we needed to modify [Python/compile.c](Python/compile.c) to generate new bytecode for our switch statement. This included 
+adding a new function called [compile_switch()](Python/compile.c#L2797). It is a rather large function
 that creates bytecode to follow the control flow:
 ```
 BasicBlock Fall-Through Control Flow:
@@ -182,7 +184,7 @@ previously, it involved a multitude of changes to the tests to rename all instan
 ## Conclusion
 
 This project posed many challenges that required both critical thinking and intense knowledge of computer science principles. We gained deeper knowledge
-into compilers and interpreters, and learned about abstract syntax trees and control flow graphs. Although the project seemed like a big undertaking, it turns
+into compilers and interpreters, and learned more about abstract syntax trees and control flow graphs. Although the project seemed like a big undertaking, it turns
 out there were only a handful of key places to modify the code. The [Python developer guide](https://devguide.python.org/) was extremely helpful and very well
 documented. Our experience with Python as contributors to a massive open source project was very pleasant and serves as an example of the ideal open source
 project.

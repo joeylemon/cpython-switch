@@ -1233,14 +1233,6 @@ class GrammarTests(unittest.TestCase):
         else: pass
 
     def test_switch(self):
-        switch 1:
-            case 0:
-                self.fail("matched incorrect case")
-            case 1:
-                pass
-            else:
-                self.fail("matched incorrect case")
-        
         switch 0:
             case 0: pass
         switch 0:
@@ -1261,7 +1253,7 @@ class GrammarTests(unittest.TestCase):
                 pass
             else:
                 pass
-
+        
     def test_while(self):
         # 'while' test ':' suite ['else' ':' suite]
         while 0: pass

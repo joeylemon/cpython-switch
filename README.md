@@ -17,6 +17,18 @@ switch 0:
 # prints "it's zero"
 ```
 
+To get started, you must clone this repository and build Python with the following instructions:
+```shell
+cd Team-Rabin
+./configure
+make
+```
+
+This will create a new executable named `python.exe`. You can then test the new switch syntax by running the unit test:
+```shell
+./python.exe Lib/test/test_switch.py 
+```
+
 ### Contributors
 
 - Isaac Sikkema ([@isikkema](https://github.com/isikkema))

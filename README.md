@@ -19,7 +19,7 @@ switch 0:
 
 To get started, you must clone this repository and build Python with the following instructions:
 ```shell
-cd Team-Rabin
+cd cpython-switch
 ./configure
 make
 ```

@@ -1,6 +1,6 @@
 # Switch Statement in Python v3.10.0
 
-![CI](https://github.com/UTK-CS594-Spring-2021/Team-Rabin/workflows/CI/badge.svg)
+![CI](https://github.com/joeylemon/cpython-switch/workflows/CI/badge.svg)
 
 This is an implementation of a new switch statement in the [CPython](https://github.com/python/cpython) interpreter at Python version 3.10.0. Below is 
 an example of the new syntax:
@@ -47,7 +47,7 @@ This will create a new executable named `python.exe`. You can then test the new 
 ## Project Description
 
 As students in COSC594: Software Development Tools at the [University of Tennessee](https://utk.edu), we were tasked with adding a new switch statement to the 
-CPython interpreter, from the tokenizer all the way to the compiler. From the project assignment:
+CPython interpreter, from the tokenizer all the way to the compiler. Per the project assignment:
 
 > The group project will entail students implementing a complex feature in a large, open source
 > development tool over the entire semester. Students will be given the freedom, and expectation, to
